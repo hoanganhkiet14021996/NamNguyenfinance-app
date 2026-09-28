@@ -1,0 +1,1471 @@
+Build a modern single-user personal finance web application for me.
+
+## 1. PRODUCT VISION
+
+The app is a private Personal Finance / Personal CFO dashboard used by ONE PERSON only.
+
+The goal is NOT to build a complicated accounting system.
+
+The goal is to help me answer these questions quickly:
+
+1. How much money do I have right now?
+2. Where is my money?
+3. How much did I spend this month?
+4. What am I spending money on?
+5. Am I spending more or less than my income?
+6. How much can I safely spend?
+7. How much am I saving each month?
+8. How is my net worth changing?
+9. What are my biggest financial commitments?
+10. Am I on track toward my financial goals?
+
+The UX should feel like a combination of:
+
+* Personal CFO
+* Premium banking dashboard
+* Modern fintech app
+* Minimal productivity app
+
+Avoid making it feel like an accounting / ERP / Excel replacement.
+
+---
+
+# 2. TECH STACK
+
+Use:
+
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
+* shadcn/ui where appropriate
+* Recharts for charts
+* Lucide icons
+* Local-first architecture
+* LocalStorage or IndexedDB for persistence initially
+
+No backend is required for V1.
+
+Design the code so a backend/database can be added later.
+
+Use clean component architecture.
+
+Suggested structure:
+
+src/
+components/
+pages/
+layouts/
+hooks/
+utils/
+types/
+data/
+lib/
+
+Use TypeScript types/interfaces for all major entities.
+
+---
+
+# 3. CORE NAVIGATION
+
+Create a left sidebar on desktop and bottom navigation on mobile.
+
+Main navigation:
+
+1. Dashboard
+2. Transactions
+3. Accounts
+4. Budgets
+5. Goals
+6. Investments
+7. Analytics
+8. Settings
+
+The sidebar should be clean and compact.
+
+Use icons + labels.
+
+Highlight the current section clearly.
+
+---
+
+# 4. VISUAL DESIGN
+
+Overall aesthetic:
+
+"Premium Personal CFO"
+
+Style:
+
+* Minimal
+* Clean
+* Modern
+* Sophisticated
+* Calm
+* Data-focused
+* Not overly colorful
+* Lots of whitespace
+* Rounded cards
+* Subtle borders
+* Very light shadows
+* High information density without feeling cluttered
+
+Do NOT make it look like a generic SaaS admin dashboard.
+
+Do NOT use excessive gradients.
+
+Do NOT use excessive glassmorphism.
+
+Do NOT use huge colorful illustrations.
+
+The app should feel suitable for someone who looks at their finances every day.
+
+---
+
+# 5. COLOR SYSTEM
+
+Use a neutral financial dashboard palette.
+
+Background:
+
+* Warm off-white / very light gray
+* Example: #F7F7F5
+
+Primary text:
+
+* Near black
+* Example: #18181B
+
+Secondary text:
+
+* Gray
+* Example: #71717A
+
+Primary accent:
+
+* Deep emerald / forest green
+* Example: #166534
+
+Positive:
+
+* Green
+
+Negative:
+
+* Red, but use sparingly
+
+Warning:
+
+* Amber
+
+Info:
+
+* Muted blue
+
+Cards:
+
+* White
+
+Borders:
+
+* Very subtle gray
+
+The primary green should communicate financial health and growth.
+
+Do not make the entire UI green.
+
+Use color mainly for:
+
+* positive cash flow
+* investment gains
+* progress
+* selected states
+* important financial indicators
+
+---
+
+# 6. TYPOGRAPHY
+
+Use Inter or Geist.
+
+Typography hierarchy:
+
+Page title:
+28–32px, semibold
+
+Section title:
+18–20px, semibold
+
+Card title:
+14–16px, medium
+
+Large financial numbers:
+28–36px, semibold/bold
+
+Secondary numbers:
+18–22px
+
+Supporting text:
+12–14px
+
+Use tabular numbers for financial figures where possible.
+
+Currency format:
+
+Vietnamese format.
+
+Examples:
+
+12,500,000 ₫
+
+or
+
+12.5M ₫
+
+Allow a display preference between:
+
+* Full numbers
+* Compact numbers
+
+---
+
+# 7. DASHBOARD
+
+The Dashboard is the most important page.
+
+At the top:
+
+"Good evening, Nam"
+
+Then a small date indicator:
+
+Saturday, September 20, 2026
+
+Then the primary financial summary.
+
+## Main KPI cards
+
+Show:
+
+### Net Worth
+
+Total assets - total liabilities
+
+Example:
+
+₫1.42B
+
++₫42M vs last month
+
+### Cash Available
+
+Cash + bank balances that are immediately available
+
+Example:
+
+₫185M
+
+### Monthly Income
+
+Current month's income
+
+Example:
+
+₫68.5M
+
+### Monthly Spending
+
+Current month's expenses
+
+Example:
+
+₫32.4M
+
+### Savings Rate
+
+Example:
+
+52.7%
+
+Use a small trend indicator.
+
+---
+
+# 8. NET WORTH CHART
+
+Large chart:
+
+"Net Worth"
+
+Default timeframe:
+
+6 months
+
+Allow:
+
+1M
+3M
+6M
+1Y
+All
+
+Line chart.
+
+Show:
+
+* Net worth
+* Assets
+* Liabilities
+
+Hovering should show exact values.
+
+Example tooltip:
+
+Sep 2026
+
+Assets: ₫1.68B
+Liabilities: ₫260M
+Net Worth: ₫1.42B
+
+---
+
+# 9. MONTHLY CASH FLOW
+
+Create a chart:
+
+Income vs Expenses
+
+X axis:
+months
+
+Y axis:
+VND
+
+Show:
+
+Income
+Expenses
+Net Cash Flow
+
+Allow switching:
+
+Monthly
+Quarterly
+Yearly
+
+---
+
+# 10. SPENDING BREAKDOWN
+
+Create a donut chart:
+
+"Where did my money go?"
+
+Categories:
+
+Housing
+Food & Dining
+Transportation
+Shopping
+Entertainment
+Health
+Travel
+Subscriptions
+Family
+Education
+Other
+
+Display category amount and percentage.
+
+Example:
+
+Food & Dining
+₫8.2M
+25.3%
+
+Clicking a category should filter the transaction list.
+
+---
+
+# 11. RECENT TRANSACTIONS
+
+Dashboard should show latest 8 transactions.
+
+Columns:
+
+Date
+Description
+Category
+Account
+Amount
+
+Example:
+
+Sep 20
+Dinner at Pizza 4P's
+Food & Dining
+Techcombank
+-₫850K
+
+Use:
+
+* red/negative for expenses
+* green/positive for income
+
+Add button:
+
+"+ Add transaction"
+
+---
+
+# 12. FINANCIAL HEALTH
+
+Create a compact section:
+
+"Financial Health"
+
+Show 4 metrics:
+
+Savings Rate
+52.7%
+
+Emergency Fund
+6.4 months
+
+Debt / Net Worth
+18.3%
+
+Monthly Burn
+₫32.4M
+
+Each metric should have:
+
+* current value
+* target
+* progress indicator
+
+Example:
+
+Emergency Fund
+
+6.4 months
+
+Target: 6 months
+
+✓ On track
+
+Do not create a fake "financial score" unless it is clearly explainable.
+
+Prefer transparent metrics over arbitrary scores.
+
+---
+
+# 13. QUICK ACTIONS
+
+Dashboard should have quick action buttons:
+
+* Add Transaction
+* Transfer Money
+* Add Account
+* Add Goal
+
+These should open modal dialogs rather than navigating away.
+
+---
+
+# 14. TRANSACTIONS PAGE
+
+This is the main data-entry page.
+
+Top section:
+
+"Transactions"
+
+Buttons:
+
+* Add Transaction
+  Import CSV
+  Export CSV
+
+Filters:
+
+Date
+Account
+Category
+Type
+Amount
+Search
+
+Types:
+
+Income
+Expense
+Transfer
+
+Transaction table:
+
+Date
+Description
+Category
+Account
+Amount
+Notes
+
+Support sorting.
+
+Support pagination or virtualized scrolling if necessary.
+
+---
+
+# 15. ADD TRANSACTION MODAL
+
+Fields:
+
+Transaction type:
+Expense / Income / Transfer
+
+Date
+
+Amount
+
+Description
+
+Category
+
+Account
+
+Notes
+
+Optional:
+
+Merchant
+
+Tags
+
+For expenses, automatically show:
+
+"₫X remaining in this month's budget"
+
+After saving:
+
+* update dashboard
+* update account balance
+* update category spending
+* update budget
+* update analytics
+
+---
+
+# 16. ACCOUNTS PAGE
+
+Show all financial accounts.
+
+Categories:
+
+Cash
+Bank
+Credit Card
+Investment
+Loan
+
+Each account card:
+
+Account name
+Institution
+Current balance
+Last updated
+
+Example:
+
+Techcombank
+Cash
+₫85.2M
+
+Vietcombank
+Cash
+₫42.8M
+
+Mirae Asset
+Investment
+₫620M
+
+Credit Card
+Liability
+-₫12.4M
+
+At the top:
+
+Total Assets
+Total Liabilities
+Net Worth
+
+---
+
+# 17. ACCOUNT DETAIL
+
+Clicking an account opens:
+
+Account name
+
+Current balance
+
+Balance history chart
+
+Transactions for this account
+
+Monthly inflow
+
+Monthly outflow
+
+Average balance
+
+Allow:
+
+Edit account
+Archive account
+Adjust balance
+
+---
+
+# 18. BUDGETS
+
+Create monthly budgeting.
+
+Page title:
+
+"Budgets"
+
+At the top:
+
+September 2026
+
+Total Budget
+₫40M
+
+Spent
+₫27.4M
+
+Remaining
+₫12.6M
+
+Overall progress bar.
+
+Category budgets:
+
+Food & Dining
+Budget: ₫10M
+Spent: ₫8.2M
+82%
+
+Transportation
+Budget: ₫5M
+Spent: ₫2.1M
+42%
+
+Shopping
+Budget: ₫6M
+Spent: ₫7.1M
+118%
+
+When a budget is exceeded, clearly show it.
+
+Allow:
+
+Create budget
+Edit budget
+Copy previous month
+
+---
+
+# 19. GOALS
+
+Create financial goals.
+
+Examples:
+
+Emergency Fund
+Travel
+New Car
+House Down Payment
+Investment Target
+
+Each goal:
+
+Goal name
+Target amount
+Current amount
+Target date
+Progress %
+
+Example:
+
+Emergency Fund
+
+₫120M / ₫150M
+
+80%
+
+Target:
+December 2026
+
+Show projected completion date based on current monthly contribution.
+
+Allow adding money to the goal.
+
+---
+
+# 20. INVESTMENTS
+
+Create an investment portfolio dashboard.
+
+Track:
+
+Asset
+Ticker
+Quantity
+Average Cost
+Current Price
+Market Value
+Unrealized P/L
+Return %
+
+Asset classes:
+
+Stocks
+ETF
+Bonds
+Funds
+Crypto
+Other
+
+Portfolio summary:
+
+Total invested
+Current value
+Unrealized gain/loss
+Return %
+
+Charts:
+
+Portfolio value over time
+
+Allocation by asset class
+
+Allocation by individual asset
+
+Important:
+
+Do NOT require real-time market APIs in V1.
+
+Use manually entered current prices or mock data.
+
+Design the architecture so a market data API can be connected later.
+
+---
+
+# 21. ANALYTICS
+
+This should be the "Personal CFO" section.
+
+Create tabs:
+
+Cash Flow
+Spending
+Income
+Net Worth
+Investments
+
+## Cash Flow
+
+Show:
+
+Income
+Expenses
+Savings
+Savings Rate
+
+Trend over time.
+
+## Spending
+
+Show:
+
+Spending by category
+Spending by month
+Top merchants
+Average monthly spending
+
+## Income
+
+Show:
+
+Salary
+Bonus
+Investment Income
+Other
+
+## Net Worth
+
+Show:
+
+Assets
+Liabilities
+Net Worth
+
+Trend.
+
+## Investments
+
+Show:
+
+Portfolio growth
+Asset allocation
+Investment return
+
+---
+
+# 22. INSIGHTS
+
+Add an "Insights" panel.
+
+This should NOT pretend to be an AI financial advisor.
+
+Instead generate simple rule-based insights from the user's data.
+
+Examples:
+
+"Food & Dining spending is 18% higher than your 3-month average."
+
+"Your savings rate increased from 45% to 53% this month."
+
+"Shopping exceeded the monthly budget by ₫1.1M."
+
+"Your cash balance increased for the third consecutive month."
+
+"Subscriptions account for ₫1.8M/month."
+
+Each insight should be:
+
+* factual
+* traceable to the underlying data
+* dismissible
+
+Do not generate generic motivational advice.
+
+---
+
+# 23. RECURRING TRANSACTIONS
+
+Support recurring transactions.
+
+Examples:
+
+Salary
+Rent
+Netflix
+Gym
+Insurance
+Loan repayment
+
+Fields:
+
+Name
+Amount
+Frequency
+Start date
+Next occurrence
+Category
+Account
+
+Frequencies:
+
+Weekly
+Monthly
+Quarterly
+Yearly
+
+Show:
+
+Upcoming transactions
+
+---
+
+# 24. DEBT / LOANS
+
+Create a simple debt tracker.
+
+Fields:
+
+Loan name
+Principal
+Outstanding balance
+Interest rate
+Monthly payment
+Due date
+Start date
+End date
+
+Show:
+
+Total debt
+
+Monthly debt payment
+
+Debt payoff progress
+
+Debt-to-net-worth ratio
+
+Do not build a complex loan amortization engine unless necessary.
+
+---
+
+# 25. SUBSCRIPTIONS
+
+Create a lightweight subscription tracker.
+
+Examples:
+
+Netflix
+Spotify
+Gym
+Cloud storage
+Software
+
+Show:
+
+Monthly subscription cost
+Annual subscription cost
+Upcoming renewal
+
+Example:
+
+Monthly subscriptions
+
+₫2.4M
+
+Annualized
+
+₫28.8M
+
+Allow marking subscriptions as active/inactive.
+
+---
+
+# 26. IMPORT / EXPORT
+
+Support CSV import.
+
+Expected CSV:
+
+Date
+Description
+Amount
+Type
+Category
+Account
+Notes
+
+Create a mapping interface when importing.
+
+Example:
+
+CSV column "merchant_name"
+→ Description
+
+CSV column "transaction_amount"
+→ Amount
+
+Provide validation before importing.
+
+Also allow:
+
+Export all transactions to CSV.
+
+---
+
+# 27. SEARCH
+
+Global search.
+
+Search:
+
+Transactions
+Accounts
+Goals
+Categories
+
+Example:
+
+Search "Grab"
+
+Show all matching transactions.
+
+Keyboard shortcut:
+
+Cmd/Ctrl + K
+
+---
+
+# 28. SETTINGS
+
+Settings sections:
+
+Profile
+Currency
+Categories
+Accounts
+Data
+Appearance
+
+Currency default:
+
+VND
+
+Date format:
+
+DD/MM/YYYY
+
+Allow dark mode.
+
+Allow compact/comfortable density.
+
+Data section:
+
+Export data
+Import data
+Clear all data
+
+For "Clear all data", require confirmation.
+
+---
+
+# 29. MOBILE RESPONSIVENESS
+
+This is very important.
+
+Desktop:
+
+Sidebar + content.
+
+Tablet:
+
+Collapsible sidebar.
+
+Mobile:
+
+Bottom navigation:
+
+Dashboard
+Transactions
+Accounts
+More
+
+Tables should become cards on mobile.
+
+The Add Transaction button should be easy to access on mobile.
+
+Consider a floating "+" button on mobile.
+
+---
+
+# 30. DARK MODE
+
+Dark mode should be premium and understated.
+
+Background:
+#09090B
+
+Cards:
+#18181B
+
+Text:
+white / light gray
+
+Primary accent:
+emerald
+
+Avoid pure black everywhere.
+
+Charts should remain readable.
+
+---
+
+# 31. INTERACTION DESIGN
+
+Use subtle animations.
+
+Examples:
+
+* Card hover
+* Number transition when data changes
+* Modal slide/fade
+* Chart tooltip
+* Progress bar animation
+
+Keep animation fast.
+
+Approximately 150–250ms.
+
+No excessive animation.
+
+---
+
+# 32. EMPTY STATES
+
+Every page should have a useful empty state.
+
+Example:
+
+No transactions yet.
+
+"Add your first transaction to start tracking your cash flow."
+
+Button:
+
+* Add Transaction
+
+Do not show broken-looking blank screens.
+
+---
+
+# 33. DEMO DATA
+
+IMPORTANT:
+
+On first launch, populate the app with realistic demo data so the UI does not look empty.
+
+Create approximately:
+
+* 4 accounts
+* 100 transactions
+* 3 budgets
+* 4 goals
+* 8 investment holdings
+* 3 recurring transactions
+* 4 subscriptions
+* 2 loans
+
+Use realistic VND amounts.
+
+The demo data should represent a realistic working professional in Vietnam.
+
+Make it easy to reset demo data.
+
+---
+
+# 34. DATA MODEL
+
+Create clean TypeScript models.
+
+Example:
+
+User
+
+Account
+
+Transaction
+
+Category
+
+Budget
+
+Goal
+
+Investment
+
+InvestmentHolding
+
+RecurringTransaction
+
+Subscription
+
+Loan
+
+FinancialSnapshot
+
+Insight
+
+Use IDs for relationships.
+
+Transactions should reference accountId and categoryId.
+
+---
+
+# 35. CALCULATIONS
+
+Implement these calculations centrally in utility functions.
+
+Net Worth:
+
+Total Assets - Total Liabilities
+
+Savings:
+
+Income - Expenses
+
+Savings Rate:
+
+Savings / Income
+
+Monthly Burn:
+
+Average monthly expenses
+
+Emergency Fund:
+
+Cash / Monthly Burn
+
+Debt Ratio:
+
+Total Debt / Net Worth
+
+Budget Usage:
+
+Category Spending / Category Budget
+
+Investment Return:
+
+(Current Value - Cost Basis) / Cost Basis
+
+Do not duplicate financial calculations across components.
+
+---
+
+# 36. DATA CONSISTENCY
+
+Important rules:
+
+When a transaction is added:
+
+1. Save transaction.
+2. Update account balance.
+3. Update category spending.
+4. Update budget.
+5. Update dashboard KPIs.
+6. Update analytics.
+
+When a transaction is edited or deleted, reverse the previous impact correctly.
+
+Transfers between accounts must NOT count as income or expense.
+
+This is important.
+
+Example:
+
+Techcombank → Vietcombank
+
+Should change balances:
+
+Techcombank -₫10M
+Vietcombank +₫10M
+
+But:
+
+Income = unchanged
+Expenses = unchanged
+
+---
+
+# 37. DASHBOARD INFORMATION HIERARCHY
+
+The dashboard should answer the user's questions in this order:
+
+1. How much do I have?
+2. How am I doing this month?
+3. Where did my money go?
+4. How is my net worth changing?
+5. What requires attention?
+
+Therefore layout should roughly be:
+
+Header
+
+↓
+Net Worth / Cash / Income / Spending / Savings Rate
+
+↓
+
+Net Worth Chart
+
+↓
+
+Income vs Expense + Spending Breakdown
+
+↓
+
+Financial Health + Insights
+
+↓
+
+Recent Transactions
+
+Do not put low-value information above the core financial metrics.
+
+---
+
+# 38. UX PRINCIPLE
+
+The application should require very little effort.
+
+A user should be able to add a transaction in less than 10 seconds.
+
+Example flow:
+
+Click +
+
+→ Expense
+
+→ ₫250,000
+
+→ Coffee
+
+→ Food & Dining
+
+→ Save
+
+Done.
+
+Remember previous categories and accounts where possible.
+
+---
+
+# 39. DESIGN DETAILS
+
+Use:
+
+* 12px–16px card radius
+* subtle 1px borders
+* small shadows
+* generous spacing
+* consistent 8px spacing system
+* responsive grid
+* sticky page headers where useful
+
+Charts should have:
+
+* minimal gridlines
+* clean tooltips
+* no unnecessary legends
+* clear labels
+
+Use icons consistently.
+
+---
+
+# 40. ACCESSIBILITY
+
+Implement:
+
+* keyboard navigation
+* visible focus states
+* semantic HTML
+* sufficient contrast
+* aria labels where appropriate
+
+Do not rely on color alone to communicate financial status.
+
+---
+
+# 41. PERFORMANCE
+
+Keep the app fast.
+
+Avoid unnecessary re-renders.
+
+Use memoization where useful.
+
+Do not introduce heavy libraries unless necessary.
+
+Charts should remain responsive even with thousands of transactions.
+
+---
+
+# 42. IMPORTANT DEVELOPMENT APPROACH
+
+Build this incrementally.
+
+Phase 1:
+
+* App shell
+* Sidebar
+* Dashboard
+* Transactions
+* Accounts
+* Local persistence
+* Demo data
+
+Phase 2:
+
+* Budgets
+* Goals
+* Analytics
+* Recurring transactions
+
+Phase 3:
+
+* Investments
+* Loans
+* Subscriptions
+* Import/export
+
+Phase 4:
+
+* Polish
+* Dark mode
+* Mobile UX
+* Animations
+* Accessibility
+
+Do NOT attempt to implement every feature in one giant component.
+
+Keep components modular.
+
+---
+
+# 43. FIRST IMPLEMENTATION
+
+Start by building Phase 1.
+
+Before coding, create:
+
+1. Information architecture
+2. TypeScript data models
+3. Design system
+4. App layout
+5. Demo data
+6. Dashboard
+7. Transactions
+8. Accounts
+9. Local persistence
+
+Then run the app and verify that:
+
+* navigation works
+* adding a transaction works
+* editing works
+* deleting works
+* account balances update
+* transfers work correctly
+* dashboard KPIs update
+* charts update
+* data survives page refresh
+
+Do not proceed to Phase 2 until Phase 1 works correctly.
+
+---
+
+# 44. FINAL UX TARGET
+
+When I open the application, I should immediately feel:
+
+"I know exactly where my money is."
+
+"I know how much I spent."
+
+"I know whether I am saving enough."
+
+"I can see my wealth growing over time."
+
+"I can take action without navigating through complicated accounting screens."
+
+Build it as a personal financial command center, not an accounting system.
