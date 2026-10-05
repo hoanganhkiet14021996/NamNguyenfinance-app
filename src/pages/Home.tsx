@@ -167,6 +167,8 @@ export default function Home() {
         </div>
         {hint && <p role="alert" className="-mt-2 text-xs text-neg">Enter an amount first, then tap a category.</p>}
 
+        <Input placeholder="Ghi chú: cơm tấm, trà sữa…" aria-label="Note" value={note} onChange={(e) => setNote(e.target.value)} />
+
         <div>
           <p className="mb-2 text-xs font-medium text-muted">Tap a category to save</p>
           <div className="grid grid-cols-4 gap-2" role="group" aria-label="Category">
@@ -197,11 +199,10 @@ export default function Home() {
         <div>
           <button type="button" onClick={() => setDetails(!details)} aria-expanded={details} className="flex items-center gap-1 text-xs text-muted hover:text-ink">
             <ChevronDown size={14} className={cx('transition-transform', details && 'rotate-180')} />
-            {accountName ?? 'No account'} · {date === today ? 'Today' : fmtDate(date)} · {note ? 'Note added' : 'Add a note'}
+            {accountName ?? 'No account'} · {date === today ? 'Today' : fmtDate(date)}
           </button>
           {details && (
             <div className="mt-3 space-y-3">
-              <Input placeholder="Note (optional)" aria-label="Note" value={note} onChange={(e) => setNote(e.target.value)} />
               <div className="grid grid-cols-2 gap-2">
                 <Select aria-label="Account" value={activeAccountId} onChange={(e) => setAccountId(e.target.value)}>
                   {accounts.map((a) => (
