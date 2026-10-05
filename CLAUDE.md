@@ -32,7 +32,7 @@ Talk to the user in Vietnamese; the app UI is English per the spec. The user is 
 
 ## Branding and theme
 - Logo: `brand/logoNAMONEY-original.jfif` (user's original, 1024x1024, had a small AI watermark bottom-right which was removed in derived files). `brand/logo-mark-dark.png` and `brand/logo-mark-transparent.png` = N + yellow dot only, no wordmark (the user asked for these two for later use).
-- App icons in `public/`: `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon.png` (derived from the original, include the NAMONEY wordmark, full-bleed square), `logo-mark.png` (256 px logo-only, used on the login page). Sidebar still uses the wordmark icon; user may want logo-only there and for the phone icon later.
+- App icons in `public/`: `apple-touch-icon.png` (180), `icon-192.png`, `icon-512.png` = phone/PWA icons, logo-only N, resized from `brand/logo-mark-dark.png` (2026-10-06, user's request; full-bleed, N fits the maskable safe zone). `favicon.png` still has the NAMONEY wordmark. `logo-mark.png` (256 px logo-only) is used on the login page. Sidebar still uses the wordmark icon. iPhone caches the home-screen icon: the user must delete and re-add it to see a new one.
 - Theme: deep teal. Dark: canvas `#071315`, card `#0d1d20`, accent `#2dd4bf`. Light: canvas `#f3f7f7`, accent `#0f766e`. Tokens live in `src/index.css`; `useTheme.ts` sets the browser theme-color. Default theme is `dark` (`src/data/settings.ts`, and `<html class="dark">` in `index.html` so the login page is dark). Users who already saved a theme keep it.
 - Browser tab title and PWA name: `NAMONEY`.
 
