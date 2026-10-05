@@ -51,7 +51,7 @@ function SignInForm() {
     <Shell>
       <Card className="space-y-4 p-6">
         <div>
-          <img src={`${import.meta.env.BASE_URL}icon-192.png`} alt="" className="mb-3 h-14 w-14 rounded-2xl" />
+          <img src={`${import.meta.env.BASE_URL}logo-mark.png`} alt="" className="mb-3 h-14 w-14 rounded-2xl" />
           <h1 className="text-xl font-semibold tracking-tight">NAMONEY</h1>
           <p className="mt-1 text-sm text-muted">{mode === 'in' ? 'Sign in to see your data on any device.' : 'Create your account.'}</p>
         </div>
