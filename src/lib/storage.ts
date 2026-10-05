@@ -24,6 +24,15 @@ export function loadData(): AppData | null {
   }
 }
 
+/** Remove the on-device copy (used on sign-out so the next person on this browser sees nothing). */
+export function clearLocalData() {
+  try {
+    localStorage.removeItem(KEY)
+  } catch {
+    // storage unavailable: nothing to clear
+  }
+}
+
 export function saveData(data: AppData) {
   try {
     localStorage.setItem(KEY, JSON.stringify(data))

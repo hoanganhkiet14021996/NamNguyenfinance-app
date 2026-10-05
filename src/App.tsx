@@ -1,4 +1,5 @@
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { AuthGate } from './components/AuthGate'
 import { ModalProvider } from './components/modals/ModalHost'
 import AppLayout from './layouts/AppLayout'
 import AccountDetail from './pages/AccountDetail'
@@ -9,7 +10,6 @@ import Home from './pages/Home'
 import Plan from './pages/Plan'
 import Settings from './pages/Settings'
 import Transactions from './pages/Transactions'
-import { StoreProvider } from './store/AppStore'
 
 function TransactionsRoute() {
   const { search } = useLocation()
@@ -18,7 +18,7 @@ function TransactionsRoute() {
 
 export default function App() {
   return (
-    <StoreProvider>
+    <AuthGate>
       <ModalProvider>
         <Routes>
           <Route element={<AppLayout />}>
@@ -33,6 +33,6 @@ export default function App() {
           </Route>
         </Routes>
       </ModalProvider>
-    </StoreProvider>
+    </AuthGate>
   )
 }

@@ -4,6 +4,7 @@ import { computeBalances, totalsFromBalances } from '../lib/calc'
 import { todayStr } from '../lib/format'
 import { uid } from '../lib/ids'
 import { loadData, saveData } from '../lib/storage'
+import { useCloudSync, type SyncStatus } from '../lib/useCloudSync'
 import type { Account, AppData, Budget, Plan, Settings, Transaction } from '../types'
 
 type NewTransaction = Omit<Transaction, 'id'>
@@ -28,14 +29,27 @@ interface Store {
   resetDemo: () => void
   clearAll: () => void
   importData: (data: AppData) => void
+  syncStatus: SyncStatus
+  retrySync: () => void
 }
 
 const StoreContext = createContext<Store>(null!)
 export const useStore = () => useContext(StoreContext)
 
-export function StoreProvider({ children }: { children: ReactNode }) {
+interface StoreProviderProps {
+  children: ReactNode
+  /** Data loaded from the cloud (or a local copy being migrated). Omit to run local-only. */
+  initialData?: AppData
+  /** Signed-in user; enables cloud sync. */
+  userId?: string
+  /** What the cloud already holds; null = nothing yet, so everything is uploaded. */
+  baseline?: AppData | null
+}
+
+export function StoreProvider({ children, initialData, userId, baseline = null }: StoreProviderProps) {
   const [today] = useState(todayStr)
-  const [data, setData] = useState<AppData>(() => loadData() ?? buildDemoData(today))
+  const [data, setData] = useState<AppData>(() => initialData ?? loadData() ?? buildDemoData(today))
+  const { status: syncStatus, retry: retrySync } = useCloudSync(data, userId, baseline)
 
   useEffect(() => saveData(data), [data])
 
@@ -143,8 +157,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       resetDemo,
       clearAll,
       importData,
+      syncStatus,
+      retrySync,
     }),
-    [data, today, balances, totals, addTransaction, updatePlan, updateTransaction, deleteTransaction, addAccount, updateAccount, archiveAccount, adjustBalance, setBudget, dismissInsight, updateSettings, resetDemo, clearAll, importData],
+    [data, today, balances, totals, addTransaction, updatePlan, updateTransaction, deleteTransaction, addAccount, updateAccount, archiveAccount, adjustBalance, setBudget, dismissInsight, updateSettings, resetDemo, clearAll, importData, syncStatus, retrySync],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

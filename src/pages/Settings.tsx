@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Card, CardTitle, Field, Input, PageHeader, Segmented, Button, Select } from '../components/ui'
+import { useSession } from '../components/AuthGate'
 import { exportJson, parseBackup } from '../lib/backup'
 import { exportTransactionsCsv } from '../lib/csv'
 import { useStore } from '../store/AppStore'
@@ -16,7 +17,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function Settings() {
-  const { data, updateSettings, resetDemo, clearAll, importData } = useStore()
+  const { data, updateSettings, resetDemo, clearAll, importData, syncStatus, retrySync } = useStore()
+  const session = useSession()
   const { settings } = data
   const fileRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState('')
@@ -38,6 +40,27 @@ export default function Settings() {
   return (
     <div className="max-w-2xl">
       <PageHeader title="Settings" />
+
+      {session && (
+        <Section title="Account">
+          <p className="text-sm">
+            Signed in as <span className="font-medium">{session.email}</span>
+          </p>
+          <p role="status" className="text-sm text-muted">
+            {syncStatus === 'saving' && 'Saving changes…'}
+            {syncStatus === 'idle' && 'All changes saved to your account.'}
+            {syncStatus === 'error' && (
+              <>
+                <span className="text-neg">Could not save to your account.</span> Retrying automatically.{' '}
+                <button className="font-medium text-accent underline" onClick={retrySync}>Retry now</button>
+              </>
+            )}
+          </p>
+          <div>
+            <Button variant="secondary" onClick={() => void session.signOut()}>Sign out</Button>
+          </div>
+        </Section>
+      )}
 
       <Section title="Profile">
         <Field label="Your name">
@@ -109,7 +132,9 @@ export default function Settings() {
       </Section>
 
       <Section title="Data">
-        <p className="text-sm text-muted">Everything is stored on this device only. Export a backup regularly.</p>
+        <p className="text-sm text-muted">
+          {session ? 'Your data is saved to your account and cached on this device. A backup export is still a good habit.' : 'Everything is stored on this device only. Export a backup regularly.'}
+        </p>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => exportJson(data)}>Export data (JSON)</Button>
           <Button variant="secondary" onClick={() => fileRef.current?.click()}>Import data</Button>
