@@ -3,7 +3,7 @@ import type { AppData } from '../types'
 import { downloadFile } from './csv'
 
 export function exportJson(data: AppData) {
-  downloadFile(`personal-cfo-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2), 'application/json')
+  downloadFile(`namoney-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2), 'application/json')
 }
 
 export async function parseBackup(file: File): Promise<AppData> {
@@ -17,6 +17,6 @@ export async function parseBackup(file: File): Promise<AppData> {
     Array.isArray(data.budgets) &&
     data.settings &&
     data.plan
-  if (!ok) throw new Error('This file is not a valid Personal CFO backup.')
+  if (!ok) throw new Error('This file is not a valid NAMONEY backup.')
   return { ...data, isDemo: false, dismissedInsights: data.dismissedInsights ?? [] }
 }

@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'Personal CFO',
-        short_name: 'CFO',
+        name: 'NAMONEY',
+        short_name: 'NAMONEY',
         description: 'Private personal finance dashboard',
         lang: 'en',
         theme_color: '#166534',

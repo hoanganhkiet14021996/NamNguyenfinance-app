@@ -53,7 +53,7 @@ export default function AppLayout() {
       >
         <div className={cx('mb-6 flex items-center gap-2 px-2', collapsed && 'justify-center px-0')}>
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-bold text-white dark:text-zinc-950">₫</span>
-          {!collapsed && <span className="font-semibold tracking-tight">Personal CFO</span>}
+          {!collapsed && <span className="font-semibold tracking-tight">NAMONEY</span>}
         </div>
         <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
           {nav.map((item) => (

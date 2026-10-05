@@ -51,7 +51,7 @@ function SignInForm() {
     <Shell>
       <Card className="space-y-4 p-6">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Personal CFO</h1>
+          <h1 className="text-xl font-semibold tracking-tight">NAMONEY</h1>
           <p className="mt-1 text-sm text-muted">{mode === 'in' ? 'Sign in to see your data on any device.' : 'Create your account.'}</p>
         </div>
         <form onSubmit={submit} className="space-y-3">

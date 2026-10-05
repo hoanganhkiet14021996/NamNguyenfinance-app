@@ -1,4 +1,5 @@
-# Personal CFO (single-user personal finance web app)
+# NAMONEY, formerly "Personal CFO" (single-user personal finance web app)
+Renamed 2026-10-05. The localStorage key `personal-cfo.v1` and Supabase tables `fin_*` keep their old names on purpose (renaming would orphan saved data).
 
 Spec: `projectvision.txt` (source of truth). Build phase by phase; do not start a phase until the previous one is verified.
 Talk to the user in Vietnamese; the app UI is English per the spec.
