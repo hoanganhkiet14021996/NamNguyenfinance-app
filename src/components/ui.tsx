@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
 import { X } from 'lucide-react'
 
 export function cx(...parts: (string | false | null | undefined)[]) {
@@ -20,6 +20,41 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: keyof typeof btnVariants }) {
   return <button {...props} className={cx(btnBase, btnVariants[variant], className)} />
+}
+
+/**
+ * Tap-twice confirmation. Replaces window.confirm(), which embedded browsers and some installed
+ * web apps never show (it silently returns false, so the action never happens).
+ */
+export function useConfirmTap(ms = 4000) {
+  const [armed, setArmed] = useState(false)
+  const timer = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+  const tap = (action: () => void) => {
+    window.clearTimeout(timer.current)
+    if (armed) {
+      setArmed(false)
+      action()
+      return
+    }
+    setArmed(true)
+    timer.current = window.setTimeout(() => setArmed(false), ms)
+  }
+  return { armed, tap }
+}
+
+export function ConfirmButton({
+  onConfirm,
+  confirmLabel = 'Tap again to confirm',
+  children,
+  ...props
+}: Omit<Parameters<typeof Button>[0], 'onClick'> & { onConfirm: () => void; confirmLabel?: ReactNode }) {
+  const { armed, tap } = useConfirmTap()
+  return (
+    <Button type="button" {...props} onClick={() => tap(onConfirm)}>
+      {armed ? confirmLabel : children}
+    </Button>
+  )
 }
 
 export function Card({ className, children, hover }: { className?: string; children: ReactNode; hover?: boolean }) {

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "vitest run && npm run build"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",

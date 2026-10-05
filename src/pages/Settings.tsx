@@ -1,11 +1,11 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Card, CardTitle, Field, Input, PageHeader, Segmented, Button, Select } from '../components/ui'
+import { Card, CardTitle, ConfirmButton, Field, Input, PageHeader, Segmented, Button, Select } from '../components/ui'
 import { useSession } from '../components/AuthGate'
 import { exportJson, parseBackup } from '../lib/backup'
 import { exportTransactionsCsv } from '../lib/csv'
 import { useStore } from '../store/AppStore'
-import type { Settings as SettingsType } from '../types'
+import type { AppData, Settings as SettingsType } from '../types'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -22,15 +22,13 @@ export default function Settings() {
   const { settings } = data
   const fileRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState('')
+  const [pendingImport, setPendingImport] = useState<AppData | null>(null)
 
   async function onImport(file?: File) {
     if (!file) return
+    setMessage('')
     try {
-      const next = await parseBackup(file)
-      if (confirm('Importing replaces all current data. Continue?')) {
-        importData(next)
-        setMessage('Data imported.')
-      }
+      setPendingImport(await parseBackup(file))
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Could not read that file.')
     }
@@ -44,7 +42,7 @@ export default function Settings() {
       {session && (
         <Section title="Account">
           <p className="text-sm">
-            Signed in as <span className="font-medium">{session.email}</span>
+            Signed in as <span className="font-medium">{session.name}</span>
           </p>
           <p role="status" className="text-sm text-muted">
             {syncStatus === 'saving' && 'Saving changes…'}
@@ -141,16 +139,26 @@ export default function Settings() {
           <Button variant="secondary" onClick={() => exportTransactionsCsv(data.transactions, data.categories, data.accounts)}>Export transactions (CSV)</Button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => onImport(e.target.files?.[0])} />
         </div>
+        {pendingImport && (
+          <div role="alert" className="flex flex-wrap items-center gap-2 rounded-xl border border-line p-3 text-sm">
+            <span className="flex-1">Importing replaces all current data. Continue?</span>
+            <Button
+              onClick={() => {
+                importData(pendingImport)
+                setPendingImport(null)
+                setMessage('Data imported.')
+              }}
+            >
+              Replace my data
+            </Button>
+            <Button variant="secondary" onClick={() => setPendingImport(null)}>Cancel</Button>
+          </div>
+        )}
         <div className="flex flex-wrap gap-2 border-t border-line pt-4">
-          <Button variant="secondary" onClick={() => confirm('Replace all data with the demo set?') && resetDemo()}>Reset demo data</Button>
-          <Button
-            variant="danger"
-            onClick={() => {
-              if (confirm('Clear ALL data (accounts, transactions, budgets)? This cannot be undone.') && confirm('Are you sure? Export a backup first if unsure.')) clearAll()
-            }}
-          >
+          <ConfirmButton variant="secondary" onConfirm={resetDemo} confirmLabel="Tap again: replace all data with demo">Reset demo data</ConfirmButton>
+          <ConfirmButton variant="danger" onConfirm={clearAll} confirmLabel="Tap again: erase EVERYTHING (cannot be undone)">
             Clear all data
-          </Button>
+          </ConfirmButton>
         </div>
         {message && <p role="status" className="text-sm text-muted">{message}</p>}
       </Section>

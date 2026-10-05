@@ -6,7 +6,7 @@ import { ArrowLeft, Archive, Pencil, SlidersHorizontal } from 'lucide-react'
 import { accountTypeLabels } from '../components/modals/AccountModals'
 import { useModals } from '../components/modals/ModalHost'
 import { TransactionCards, TransactionTable } from '../components/TransactionTable'
-import { Button, Card, CardTitle, EmptyState, PageHeader } from '../components/ui'
+import { Button, Card, CardTitle, ConfirmButton, EmptyState, PageHeader } from '../components/ui'
 import { useMoney } from '../hooks/useMoney'
 import { balancesAtDates, monthEnd, monthRange, txEffect } from '../lib/calc'
 import { axisMoney } from '../lib/format'
@@ -73,17 +73,17 @@ export default function AccountDetail() {
           <>
             <Button variant="secondary" onClick={() => openAccount(account)}><Pencil size={15} /> Edit</Button>
             <Button variant="secondary" onClick={() => openAdjust(account)}><SlidersHorizontal size={15} /> Adjust balance</Button>
-            <Button
+            <ConfirmButton
               variant="secondary"
-              onClick={() => {
-                if (confirm(`Archive ${account.name}? It will be hidden and excluded from totals. Its transactions are kept.`)) {
-                  archiveAccount(account.id, true)
-                  navigate('/accounts')
-                }
+              title="Hides the account and excludes it from totals. Its transactions are kept."
+              confirmLabel={<><Archive size={15} /> Tap again to archive</>}
+              onConfirm={() => {
+                archiveAccount(account.id, true)
+                navigate('/accounts')
               }}
             >
               <Archive size={15} /> Archive
-            </Button>
+            </ConfirmButton>
           </>
         }
       />

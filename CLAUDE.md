@@ -10,26 +10,24 @@ Talk to the user in Vietnamese; the app UI is English per the spec. The user is 
 - `gh` CLI is NOT installed; plain `git` is enough. The user logged in to GitHub once through Git Credential Manager (browser pop-up), so `git push` works from this machine. Claude cannot enter credentials; if a push asks for login, the user runs `git push` in their own terminal.
 - Only push when the user asks. Pushing `main` = changes the live site.
 
-## Git state (as of 2026-10-05) , READ THIS FIRST
-- Local history was merged with GitHub's (`--allow-unrelated-histories`, local files won). `main` == `origin/main` at commit `251c656` ("Update page title...").
-- Branch `supabase` is checked out locally with all newer work. It is **NOT pushed and NOT merged into main**, so the live site is still the old localStorage-only app.
-- Commits on `supabase` (oldest to newest): note field on Quick add; Supabase sign-in + cloud sync; rename to NAMONEY; logo/icons + deep teal theme; default dark theme; logo-only brand assets; logo-only mark on login page.
-- To ship: finish the Supabase setup checklist below, then `git checkout main`, `git merge supabase`, `git push origin main`. Do it only after the user confirms the cloud flow works.
+## Git state (as of 2026-10-06) , READ THIS FIRST
+- 2026-10-06: branch `supabase` (cloud sync, NAMONEY rebrand, name+PIN sign-in, tap-twice confirms, smoke tests) was merged into `main` and pushed at the user's request, so the live site now has sign-in + cloud sync. Work on `main` from now on (the `supabase` branch is just history).
+- No `window.confirm()` anywhere: the in-app browser pane and some installed web apps never show it (returns false). Use `ConfirmButton` / `useConfirmTap` from `src/components/ui.tsx`.
 - Commit messages: end with the `Co-Authored-By:` line from the session's attribution instructions. In PowerShell, multi-line/quoted messages break `git commit -m`; write the message to a temp file and use `git commit -F <file>`.
 
-## Supabase (cloud database + login) , built, NOT yet verified end to end
+## Supabase (cloud database + login) , working (user signed up, added and deleted transactions on 2026-10-06)
 - Project URL `https://jaekhiuaybhsqtfsnuae.supabase.co`; the publishable key is in `.env` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`). Both are public by design and committed on purpose; security comes from Row Level Security. NEVER put the `service_role`/secret key or the DB password in the repo or chat.
 - One Supabase project is shared by several of the user's apps (the user manages Supabase from another workspace). `supabase/schema.sql` holds all of it, idempotent, to be pasted into Supabase > SQL Editor: CaliTrack tables copied unchanged (`profiles`, `food_logs`, `activity_logs`, `weight_logs`, `saved_meals`, `custom_foods`) + NAMONEY tables prefixed `fin_` (`fin_settings`, `fin_accounts`, `fin_categories`, `fin_transactions`, `fin_budgets`). Next apps get their own prefix. Every table: `user_id` + RLS ("own rows"). Supabase shows a scary "destructive / no RLS" warning for this file; the right choice is "Run and enable RLS".
-- Last check (2026-10-05): the REST endpoint answered `PGRST205` (table `fin_settings` missing), so the URL/key are valid but the SQL had not been run yet. The user was in the middle of running it.
+- Schema has been run (2026-10-05): `fin_*` tables exist; anon gets `42501 permission denied` on them, which is intended (`revoke all ... from anon`).
 - Code: `src/lib/supabase.ts` (client, password auth, no tokens in URL because of HashRouter; if env vars are empty the app runs local-only like before), `src/lib/cloud.ts` (`pullData`, `pushChanges` diff-based upsert/delete, paginates at 1000 rows), `src/lib/useCloudSync.ts` (debounced 0.7 s, retry every 10 s, flush on tab hide), `src/components/AuthGate.tsx` (sign-in/sign-up form, loads data, provides `useSession`), `StoreProvider` in `src/store/AppStore.tsx` takes `initialData/userId/baseline` and exposes `syncStatus`/`retrySync`, Settings > Account shows email, sync status, Sign out.
+- Sign-in is "name + 6-digit PIN" (`src/lib/auth.ts`, copied from the user's other project for consistency): name -> fake email `<name>@namnguyen27.app` (domain chosen by the user), PIN = password, so one account works in every app on the shared project that uses the same domain. The user maintains this file; keep it in sync with the other project (only local diff: inline `normalize` because this app has no `search.ts`). Never change `EMAIL_DOMAIN` (locks out every account). Needs "Confirm email" OFF (it is, checked 2026-10-05); sign-up refuses otherwise.
 - Login flow: remote data wins; if the account has no cloud data yet, real (non-demo) local data is uploaded once, otherwise it starts EMPTY (no demo data). Sign-out clears the local cache.
 - Settings row `fin_settings` is written last on first upload, so a failed first upload is retried in full.
 
 ### Supabase checklist still open (user does these in the dashboard)
-1. Run `supabase/schema.sql` (choose "Run and enable RLS"); confirm 11 tables show RLS enabled.
-2. Authentication > URL Configuration: Site URL = the live URL above; add `http://127.0.0.1:5188/**` as redirect URL. Optionally turn off "Confirm email".
-3. Create the user's own account through the app's "Create one" link, then turn OFF "Allow new users to sign up" (the key is public, so strangers could otherwise create accounts; they still could not read data thanks to RLS).
-4. Verify: add a transaction locally, see it appear in Table Editor > `fin_transactions`; sign out/in; check on a second device.
+- Done: schema run, "Confirm email" off, user's account created, add/delete verified locally.
+- Still open (2026-10-06): "Allow new users to sign up" is still ON (`/auth/v1/settings` -> `disable_signup:false`). Strangers could create accounts (they still cannot read others' data thanks to RLS). Turning it off also blocks new accounts in the user's other apps on this project.
+- Not yet checked: Site URL in Authentication > URL Configuration; sign out/in and a second device (phone) on the live site.
 - Not decided: whether CaliTrack (separate app/workspace) will point at this same Supabase project (needs its URL/key switched and any old data exported/imported), and what the user's "third" app is.
 
 ## Branding and theme
@@ -59,6 +57,8 @@ React + TypeScript + Vite, Tailwind v4 (tokens in `src/index.css`), Recharts, lu
 
 ## Commands
 - `npm run dev` (add `-- --host` for phone testing on the LAN), `npm run build`, `npm test`.
+- `npm run check` = all tests + type-check + build; the user runs it after edits. `src/app.test.ts` holds plain-language smoke tests of everyday tasks (sign-in helpers, add/edit/delete/transfer, budgets, local save, cloud diff with Supabase mocked). Add a case there when a new everyday feature lands.
+- Deleting a transaction: tap it (Home recent list or History) > red "Delete" button in the edit sheet > confirm.
 - The user runs ANOTHER project on port 5173. Always preview this one on its own port, e.g. `npx vite --port 5188 --strictPort --host 127.0.0.1`. Check `Get-NetTCPConnection -State Listen` first. Tell the user the exact URL.
 - Opening `index.html` or `dist/index.html` by double-click shows a blank page (module scripts do not run from file://). Always use the dev server URL.
 - To preview inside the app without logging in, create a temporary `.env.local` with empty `VITE_SUPABASE_URL=` and `VITE_SUPABASE_PUBLISHABLE_KEY=` (gitignored), restart vite, and DELETE it afterwards.

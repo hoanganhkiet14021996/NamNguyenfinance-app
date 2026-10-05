@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { buildEmptyData } from '../data/demo'
+import { displayName, PIN_LENGTH, signInWithPin, signUpWithPin, signOut as authSignOut } from '../lib/auth'
 import { pullData } from '../lib/cloud'
 import { loadData, clearLocalData } from '../lib/storage'
 import { cloudConfigured, supabase } from '../lib/supabase'
@@ -9,7 +10,7 @@ import type { AppData } from '../types'
 import { Button, Card, Field, Input } from './ui'
 
 interface SessionInfo {
-  email: string
+  name: string
   signOut: () => Promise<void>
 }
 
@@ -27,8 +28,8 @@ function Shell({ children }: { children: ReactNode }) {
 
 function SignInForm() {
   const [mode, setMode] = useState<'in' | 'up'>('in')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
+  const [pin, setPin] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -36,13 +37,10 @@ function SignInForm() {
     e.preventDefault()
     setBusy(true)
     setMessage('')
-    if (mode === 'in') {
-      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-      if (error) setMessage(error.message)
-    } else {
-      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
-      if (error) setMessage(error.message)
-      else if (!data.session) setMessage('Account created. Check your email and confirm it, then sign in.')
+    try {
+      await (mode === 'in' ? signInWithPin(username, pin) : signUpWithPin(username, pin))
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Something went wrong.')
     }
     setBusy(false)
   }
@@ -56,17 +54,19 @@ function SignInForm() {
           <p className="mt-1 text-sm text-muted">{mode === 'in' ? 'Sign in to see your data on any device.' : 'Create your account.'}</p>
         </div>
         <form onSubmit={submit} className="space-y-3">
-          <Field label="Email">
-            <Input type="email" autoComplete="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Field label="Name" hint={mode === 'up' ? 'Same name works in all your apps.' : undefined}>
+            <Input autoComplete="username" autoCapitalize="none" required autoFocus value={username} onChange={(e) => setUsername(e.target.value)} />
           </Field>
-          <Field label="Password" hint={mode === 'up' ? 'At least 8 characters.' : undefined}>
+          <Field label={`PIN (${PIN_LENGTH} digits)`}>
             <Input
               type="password"
+              inputMode="numeric"
+              pattern={`\\d{${PIN_LENGTH}}`}
+              maxLength={PIN_LENGTH}
               autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
               required
-              minLength={mode === 'up' ? 8 : undefined}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
             />
           </Field>
           {message && <p role="alert" className="text-sm text-neg">{message}</p>}
@@ -121,7 +121,7 @@ function SignedIn({ session, children }: { session: Session; children: ReactNode
   }, [userId, attempt])
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    await authSignOut()
     clearLocalData()
   }, [])
 
@@ -145,7 +145,7 @@ function SignedIn({ session, children }: { session: Session; children: ReactNode
   }
 
   return (
-    <SessionContext.Provider value={{ email: session.user.email ?? '', signOut }}>
+    <SessionContext.Provider value={{ name: displayName(session.user), signOut }}>
       <StoreProvider key={userId} initialData={loaded.initial} baseline={loaded.baseline} userId={userId}>
         {children}
       </StoreProvider>

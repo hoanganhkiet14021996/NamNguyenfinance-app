@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { ChevronsLeft, ChevronsRight, Ellipsis, House, Landmark, LayoutDashboard, PiggyBank, Plus, Receipt, Settings, X, type LucideIcon } from 'lucide-react'
-import { cx } from '../components/ui'
+import { cx, useConfirmTap } from '../components/ui'
 import { useModals } from '../components/modals/ModalHost'
 import { useApplyAppearance } from '../hooks/useTheme'
 import { useStore } from '../store/AppStore'
@@ -28,6 +28,7 @@ export default function AppLayout() {
   useApplyAppearance()
   const { openTransaction } = useModals()
   const { data, resetDemo } = useStore()
+  const resetConfirm = useConfirmTap()
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 1024)
   const [moreOpen, setMoreOpen] = useState(false)
   const location = useLocation()
@@ -77,8 +78,8 @@ export default function AppLayout() {
         {data.isDemo && (
           <div className="border-b border-line bg-accent-soft px-4 py-2 text-center text-xs text-accent">
             You're viewing demo data.{' '}
-            <button className="font-semibold underline" onClick={() => confirm('Reset all data back to the demo set?') && resetDemo()}>
-              Reset demo
+            <button className="font-semibold underline" onClick={() => resetConfirm.tap(resetDemo)}>
+              {resetConfirm.armed ? 'Tap again to reset demo' : 'Reset demo'}
             </button>{' '}
             or clear it in Settings › Data.
           </div>

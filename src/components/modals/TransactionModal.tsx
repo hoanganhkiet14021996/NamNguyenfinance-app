@@ -6,7 +6,7 @@ import { useMoney } from '../../hooks/useMoney'
 import { useStore } from '../../store/AppStore'
 import type { Transaction, TxType } from '../../types'
 import CategoryIcon from '../CategoryIcon'
-import { AmountInput, Button, cx, Field, Input, Modal, Segmented, Select } from '../ui'
+import { AmountInput, Button, ConfirmButton, cx, Field, Input, Modal, Segmented, Select } from '../ui'
 
 export interface TxDefaults {
   type?: TxType
@@ -93,10 +93,9 @@ export default function TransactionModal({ tx, defaults, onClose }: { tx?: Trans
   }
 
   function remove() {
-    if (tx && confirm('Delete this transaction? Account balances and reports will be updated.')) {
-      deleteTransaction(tx.id)
-      onClose()
-    }
+    if (!tx) return
+    deleteTransaction(tx.id)
+    onClose()
   }
 
   const activeCategory = data.categories.find((c) => c.id === categoryId)
@@ -220,9 +219,9 @@ export default function TransactionModal({ tx, defaults, onClose }: { tx?: Trans
 
         <div className="flex gap-2 pt-2">
           {tx && (
-            <Button type="button" variant="danger" onClick={remove} aria-label="Delete transaction">
-              <Trash2 size={16} />
-            </Button>
+            <ConfirmButton variant="danger" onConfirm={remove} confirmLabel={<><Trash2 size={16} /> Tap again to delete</>}>
+              <Trash2 size={16} /> Delete
+            </ConfirmButton>
           )}
           <Button type="submit" className="flex-1" disabled={!valid}>
             {tx ? 'Save changes' : 'Save'}
