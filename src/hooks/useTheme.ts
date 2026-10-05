@@ -9,7 +9,7 @@ export function useApplyAppearance() {
     const apply = () => {
       const dark = theme === 'dark' || (theme === 'system' && media.matches)
       document.documentElement.classList.toggle('dark', dark)
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#09090b' : '#f7f7f5')
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#071315' : '#f3f7f7')
     }
     apply()
     media.addEventListener('change', apply)
