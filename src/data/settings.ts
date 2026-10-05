@@ -5,7 +5,7 @@ export const defaultSettings: Settings = {
   currency: 'VND',
   dateFormat: 'DD/MM/YYYY',
   numberFormat: 'full',
-  theme: 'system',
+  theme: 'dark',
   density: 'comfortable',
 }
 
