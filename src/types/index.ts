@@ -52,6 +52,33 @@ export interface Budget {
   amount: number
 }
 
+export type BillFrequency = 'weekly' | 'monthly' | 'yearly'
+
+/** A recurring payment. Nothing is recorded until the user taps "Paid". */
+export interface Bill {
+  id: string
+  name: string
+  amount: number
+  categoryId: string
+  accountId: string
+  frequency: BillFrequency
+  /** YYYY-MM-DD of the next payment. */
+  nextDue: string
+  /** Day of month to keep for monthly/yearly bills (so 31 -> 28 -> 31 does not drift). */
+  day: number
+}
+
+/** A savings goal; the user adds money by hand (it does not touch accounts). */
+export interface Goal {
+  id: string
+  name: string
+  target: number
+  saved: number
+  /** YYYY-MM-DD, optional. */
+  deadline?: string
+  createdAt: string
+}
+
 export interface FinancialSnapshot {
   date: string
   assets: number
@@ -72,7 +99,7 @@ export interface Settings {
   currency: 'VND'
   dateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD'
   numberFormat: 'full' | 'compact'
-  theme: 'light' | 'dark' | 'system'
+  theme: 'light' | 'dark' | 'pink' | 'system'
   density: 'comfortable' | 'compact'
 }
 
@@ -91,5 +118,7 @@ export interface AppData {
   categories: Category[]
   transactions: Transaction[]
   budgets: Budget[]
+  bills: Bill[]
+  goals: Goal[]
   dismissedInsights: string[]
 }

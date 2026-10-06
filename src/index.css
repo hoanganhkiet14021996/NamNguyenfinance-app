@@ -15,6 +15,8 @@
   --neg: #b91c1c;
   --warn: #b45309;
   --info: #3b6ea5;
+  --on-accent: #ffffff;
+  --shadow-tint: 0 0 0;
   --row-y: 12px;
   color-scheme: light;
 }
@@ -32,7 +34,27 @@
   --neg: #f87171;
   --warn: #fbbf24;
   --info: #7aa7d9;
+  --on-accent: #09090b;
   color-scheme: dark;
+}
+
+/* Blush pink: light theme, rose accent; white text on accent passes WCAG AA (5.46:1). */
+html[data-theme='pink'] {
+  --canvas: #fbe8ef;
+  --card: #fffafc;
+  --line: #f2cbda;
+  --soft: #f9dbe6;
+  --ink: #3b2130;
+  --muted: #76506a;
+  --accent: #b8396d;
+  --accent-soft: #f9d6e4;
+  --pos: #15803d;
+  --neg: #b91c1c;
+  --warn: #b45309;
+  --info: #3b6ea5;
+  --on-accent: #ffffff;
+  --shadow-tint: 184 57 109;
+  color-scheme: light;
 }
 
 html[data-density='compact'] {
@@ -52,6 +74,7 @@ html[data-density='compact'] {
   --color-neg: var(--neg);
   --color-warn: var(--warn);
   --color-info: var(--info);
+  --color-on-accent: var(--on-accent);
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
@@ -71,6 +94,27 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Category colors: saved as one hex (--cat), lightened on dark so icons stay readable (5.5:1+). */
+.cat-icon {
+  --cat-shown: var(--cat);
+  color: var(--cat-shown);
+  background: color-mix(in srgb, var(--cat-shown) 12%, transparent);
+}
+
+.cat-dot {
+  background: var(--cat);
+}
+
+.dark .cat-icon {
+  --cat-shown: color-mix(in srgb, var(--cat) 55%, white);
+}
+
+.dark .cat-dot,
+.dark .cat-fill {
+  background: color-mix(in srgb, var(--cat) 55%, white);
+  fill: color-mix(in srgb, var(--cat) 55%, white);
+}
+
 .num {
   font-variant-numeric: tabular-nums;
 }
@@ -85,12 +129,12 @@ body {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+  box-shadow: 0 1px 2px rgb(var(--shadow-tint) / 0.03);
   transition: box-shadow 200ms ease, border-color 200ms ease;
 }
 
 .card-hover:hover {
-  box-shadow: 0 4px 14px rgb(0 0 0 / 0.06);
+  box-shadow: 0 4px 14px rgb(var(--shadow-tint) / 0.06);
 }
 
 @keyframes fade-in {

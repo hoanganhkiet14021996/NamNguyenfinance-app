@@ -39,7 +39,7 @@ export function AccountModal({ account, onClose, onCreated }: { account?: Accoun
   }
 
   return (
-    <Modal title={account ? 'Edit account' : 'Add account'} onClose={onClose}>
+    <Modal title={account ? 'Edit account' : 'Add account'} onClose={onClose} dismissOnBackdrop={false}>
       <form
         className="space-y-4"
         onSubmit={(e) => {
@@ -81,7 +81,7 @@ export function AdjustBalanceModal({ account, onClose }: { account: Account; onC
   const [value, setValue] = useState(Math.abs(current))
 
   return (
-    <Modal title="Adjust balance" onClose={onClose}>
+    <Modal title="Adjust balance" onClose={onClose} dismissOnBackdrop={false}>
       <form
         className="space-y-4"
         onSubmit={(e) => {

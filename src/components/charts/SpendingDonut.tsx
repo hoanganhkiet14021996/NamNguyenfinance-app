@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { monthEnd, spendingByCategory } from '../../lib/calc'
@@ -36,10 +36,10 @@ export default function SpendingDonut() {
               <PieChart>
                 <Pie data={rows} dataKey="amount" nameKey="name" innerRadius={56} outerRadius={82} paddingAngle={2} stroke="none" isAnimationActive={false} onClick={(d) => open((d as unknown as { categoryId: string }).categoryId)} animationDuration={400}>
                   {rows.map((r) => (
-                    <Cell key={r.categoryId} fill={r.color} className="cursor-pointer outline-none" />
+                    <Cell key={r.categoryId} fill={r.color} style={{ '--cat': r.color } as CSSProperties} className="cat-fill cursor-pointer outline-none" />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v) => money(Number(v))} contentStyle={{ borderRadius: 12, border: '1px solid var(--line)', background: 'var(--card)', fontSize: 12 }} />
+                <Tooltip formatter={(v) => money(Number(v))} contentStyle={{ borderRadius: 12, border: '1px solid var(--line)', background: 'var(--card)', fontSize: 12 }} itemStyle={{ color: 'var(--ink)' }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
@@ -51,7 +51,7 @@ export default function SpendingDonut() {
             {rows.map((r) => (
               <li key={r.categoryId}>
                 <button onClick={() => open(r.categoryId)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-soft">
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: r.color }} aria-hidden="true" />
+                  <span className="cat-dot h-2.5 w-2.5 shrink-0 rounded-full" style={{ '--cat': r.color } as CSSProperties} aria-hidden="true" />
                   <span className="min-w-0 flex-1 truncate">{r.name}</span>
                   <span className="num text-muted">{money(r.amount, { mode: 'compact' })}</span>
                   <span className="num w-12 text-right text-xs text-muted">{pct(r.amount / total)}</span>

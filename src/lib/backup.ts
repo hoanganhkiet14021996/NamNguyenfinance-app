@@ -10,7 +10,7 @@ export async function parseBackup(file: File): Promise<AppData> {
   const data = JSON.parse(await file.text())
   const ok =
     data &&
-    data.version === DATA_VERSION &&
+    (data.version === DATA_VERSION || data.version === 2) &&
     Array.isArray(data.accounts) &&
     Array.isArray(data.categories) &&
     Array.isArray(data.transactions) &&
@@ -18,5 +18,5 @@ export async function parseBackup(file: File): Promise<AppData> {
     data.settings &&
     data.plan
   if (!ok) throw new Error('This file is not a valid NAMONEY backup.')
-  return { ...data, isDemo: false, dismissedInsights: data.dismissedInsights ?? [] }
+  return { ...data, version: DATA_VERSION, isDemo: false, bills: data.bills ?? [], goals: data.goals ?? [], dismissedInsights: data.dismissedInsights ?? [] }
 }

@@ -1,9 +1,9 @@
-﻿import { computeBalances, monthRange } from '../lib/calc'
+﻿import { computeBalances, monthRange, shiftMonth } from '../lib/calc'
 import { defaultCategories } from './categories'
 import { defaultPrefs, defaultSettings, demoPlan, emptyPlan } from './settings'
-import type { Account, AppData, Budget, Transaction } from '../types'
+import type { Account, AppData, Bill, Budget, Goal, Transaction } from '../types'
 
-export const DATA_VERSION = 2
+export const DATA_VERSION = 3
 const HISTORY_MONTHS = 9
 
 function rng(seed: number) {
@@ -16,9 +16,11 @@ function rng(seed: number) {
 }
 
 const POOLS: Record<string, string[]> = {
-  food: ['Highlands Coffee', "Dinner at Pizza 4P's", 'GrabFood order', 'Bách Hóa Xanh groceries', 'Phở lunch', 'The Coffee House', 'Weekend brunch'],
+  food: ["Dinner at Pizza 4P's", 'GrabFood order', 'Cơm tấm', 'Phở lunch', 'Weekend brunch'],
+  drinks: ['Highlands Coffee', 'The Coffee House', 'Phúc Long milk tea', 'Cà phê sữa đá'],
+  groceries: ['Bách Hóa Xanh', 'WinMart', 'Co.op Mart'],
   transport: ['Grab ride', 'Xanh SM ride', 'Gasoline - Petrolimex', 'Parking', 'Grab bike'],
-  shopping: ['Shopee order', 'Uniqlo', 'Tiki books & gadgets', 'Lazada order', 'Zara'],
+  clothes: ['Uniqlo', 'Zara', 'Shopee order'],
   entertainment: ['CGV Cinemas', 'Karaoke night', 'Steam games', 'Concert tickets'],
   health: ['Pharmacity', 'Dental checkup', 'Health check-up'],
   travel: ['Vietjet flight to Da Nang', 'Hotel booking Da Lat', 'Traveloka trip'],
@@ -93,15 +95,17 @@ export function buildDemoData(today: string): AppData {
     add({ type: 'expense', date: date(month, 1), amount: 9_000_000, description: 'Apartment rent', categoryId: 'housing', accountId: 'acc-tcb' })
     add({ type: 'expense', date: date(month, 8), amount: round(between(1_100_000, 1_600_000), 10_000), description: 'Electricity, water & internet', categoryId: 'housing', accountId: 'acc-tcb' })
     add({ type: 'expense', date: date(month, 7), amount: 3_000_000, description: 'Support for parents', categoryId: 'family', accountId: 'acc-tcb' })
-    add({ type: 'expense', date: date(month, 2), amount: 600_000, description: 'Gym membership', categoryId: 'subscriptions', accountId: 'acc-tcb' })
+    add({ type: 'expense', date: date(month, 2), amount: 600_000, description: 'Gym membership', categoryId: 'sports', accountId: 'acc-tcb' })
     add({ type: 'expense', date: date(month, 3), amount: 260_000, description: 'Netflix', categoryId: 'subscriptions', accountId: 'acc-cc', merchant: 'Netflix' })
     add({ type: 'expense', date: date(month, 3), amount: 59_000, description: 'Spotify Premium', categoryId: 'subscriptions', accountId: 'acc-cc', merchant: 'Spotify' })
 
     const cc = (p: number) => () => (rand() < p ? 'acc-cc' : 'acc-tcb')
     const tcb = () => 'acc-tcb'
-    scaled(month, 'food', isCurrent ? 8_200_000 : round(between(8_500_000, 11_000_000), 5000), 5, cc(0.3), maxDay)
+    scaled(month, 'food', isCurrent ? 5_600_000 : round(between(6_000_000, 7_500_000), 5000), 4, cc(0.3), maxDay)
+    scaled(month, 'drinks', isCurrent ? 1_200_000 : round(between(1_000_000, 1_800_000), 5000), 4, cc(0.3), maxDay)
+    scaled(month, 'groceries', isCurrent ? 1_400_000 : round(between(1_500_000, 2_200_000), 5000), 2, tcb, maxDay)
     scaled(month, 'transport', isCurrent ? 2_100_000 : round(between(2_400_000, 3_500_000), 5000), 3, tcb, maxDay)
-    scaled(month, 'shopping', isCurrent ? 7_100_000 : round(between(3_500_000, 7_000_000), 5000), 2, cc(0.7), maxDay)
+    scaled(month, 'clothes', isCurrent ? 7_100_000 : round(between(3_500_000, 7_000_000), 5000), 2, cc(0.7), maxDay)
     scaled(month, 'entertainment', isCurrent ? 1_400_000 : round(between(1_200_000, 2_600_000), 5000), 2, cc(0.5), maxDay)
     scaled(month, 'health', isCurrent ? 800_000 : rand() < 0.6 ? round(between(300_000, 1_500_000), 5000) : 0, 1, tcb, maxDay)
     scaled(month, 'other', isCurrent ? 600_000 : round(between(300_000, 1_200_000), 5000), 1, tcb, maxDay)
@@ -139,7 +143,21 @@ export function buildDemoData(today: string): AppData {
   const budgets: Budget[] = [
     { id: 'bud_food', month: 'all', categoryId: 'food', amount: 10_000_000 },
     { id: 'bud_transport', month: 'all', categoryId: 'transport', amount: 5_000_000 },
-    { id: 'bud_shopping', month: 'all', categoryId: 'shopping', amount: 6_000_000 },
+    { id: 'bud_clothes', month: 'all', categoryId: 'clothes', amount: 6_000_000 },
+  ]
+
+  // Next payment on `day` of the month: this month if it is still ahead, else next month.
+  const dueOn = (day: number) => {
+    const thisMonth = date(currentMonth, day)
+    return thisMonth >= today ? thisMonth : date(shiftMonth(currentMonth, 1), day)
+  }
+  const bills: Bill[] = [
+    { id: 'bill_rent', name: 'Apartment rent', amount: 9_000_000, categoryId: 'housing', accountId: 'acc-tcb', frequency: 'monthly', nextDue: dueOn(1), day: 1 },
+    { id: 'bill_power', name: 'Electricity & water', amount: 1_300_000, categoryId: 'housing', accountId: 'acc-tcb', frequency: 'monthly', nextDue: dueOn(8), day: 8 },
+    { id: 'bill_gym', name: 'Gym membership', amount: 600_000, categoryId: 'sports', accountId: 'acc-tcb', frequency: 'monthly', nextDue: dueOn(2), day: 2 },
+  ]
+  const goals: Goal[] = [
+    { id: 'goal_trip', name: 'Trip to Japan', target: 60_000_000, saved: 24_000_000, deadline: date(shiftMonth(currentMonth, 8), 15), createdAt: today },
   ]
 
   return {
@@ -152,6 +170,8 @@ export function buildDemoData(today: string): AppData {
     categories: defaultCategories,
     transactions: txs,
     budgets,
+    bills,
+    goals,
     dismissedInsights: [],
   }
 }
@@ -167,6 +187,8 @@ export function buildEmptyData(previous?: AppData): AppData {
     categories: defaultCategories,
     transactions: [],
     budgets: [],
+    bills: [],
+    goals: [],
     dismissedInsights: [],
   }
 }

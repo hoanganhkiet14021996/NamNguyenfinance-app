@@ -101,7 +101,7 @@ export default function TransactionModal({ tx, defaults, onClose }: { tx?: Trans
   const activeCategory = data.categories.find((c) => c.id === categoryId)
 
   return (
-    <Modal title={tx ? 'Edit transaction' : 'Add transaction'} onClose={onClose}>
+    <Modal title={tx ? 'Edit transaction' : 'Add transaction'} onClose={onClose} dismissOnBackdrop={false}>
       <form
         className="space-y-4"
         onSubmit={(e) => {
@@ -144,7 +144,7 @@ export default function TransactionModal({ tx, defaults, onClose }: { tx?: Trans
                     aria-checked={categoryId === c.id}
                     onClick={() => setCategoryId(c.id)}
                     className={cx(
-                      'flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-[11px] leading-tight transition-colors',
+                      'flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-[13px] leading-tight transition-colors',
                       categoryId === c.id ? 'border-accent bg-accent-soft font-medium' : 'border-line hover:bg-soft',
                     )}
                   >

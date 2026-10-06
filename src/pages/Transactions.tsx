@@ -7,6 +7,7 @@ import { Button, Card, EmptyState, Input, PageHeader, Select } from '../componen
 import { useMoney } from '../hooks/useMoney'
 import { monthEnd, shiftMonth } from '../lib/calc'
 import { exportTransactionsCsv } from '../lib/csv'
+import { normalizeText } from '../lib/format'
 import { useStore } from '../store/AppStore'
 import type { TxType } from '../types'
 
@@ -44,7 +45,7 @@ export default function Transactions() {
   const { rows, income, expenses } = useMemo(() => {
     const cats = new Map(data.categories.map((c) => [c.id, c.name]))
     const accs = new Map(data.accounts.map((a) => [a.id, a.name]))
-    const term = q.trim().toLowerCase()
+    const term = normalizeText(q.trim())
     const min = Number(minAmount.replace(/\D/g, '')) || 0
     const max = Number(maxAmount.replace(/\D/g, '')) || Infinity
 
@@ -56,7 +57,7 @@ export default function Transactions() {
       if (t.amount < min || t.amount > max) return false
       if (term) {
         const hay = [t.description, t.merchant, t.notes, t.categoryId && cats.get(t.categoryId), accs.get(t.accountId), ...(t.tags ?? [])]
-        if (!hay.some((v) => v && v.toLowerCase().includes(term))) return false
+        if (!hay.some((v) => v && normalizeText(v).includes(term))) return false
       }
       return true
     })

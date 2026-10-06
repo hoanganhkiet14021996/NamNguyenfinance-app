@@ -1,5 +1,5 @@
-import { addDays, addMonths, endOfMonth, format, parseISO } from 'date-fns'
-import type { Account, AccountType, Budget, FinancialSnapshot, Plan, Transaction } from '../types'
+import { addDays, addMonths, differenceInCalendarDays, endOfMonth, format, getDaysInMonth, parseISO, setDate, startOfMonth } from 'date-fns'
+import type { Account, AccountType, Bill, BillFrequency, Budget, FinancialSnapshot, Goal, Plan, Transaction } from '../types'
 
 export const ASSET_TYPES: AccountType[] = ['cash', 'bank', 'investment']
 export const LIABILITY_TYPES: AccountType[] = ['credit_card', 'loan']
@@ -209,4 +209,42 @@ export function netWorthDates(range: NetWorthRange, today: string, firstDate: st
     dates.push(m === currentMonth ? today : monthEnd(m))
   }
   return dates
+}
+
+/** The payment after `date`. Monthly/yearly keep `day`, clamped to short months. */
+export function advanceDue(date: string, frequency: BillFrequency, day: number): string {
+  const d = parseISO(date)
+  if (frequency === 'weekly') return format(addDays(d, 7), 'yyyy-MM-dd')
+  const first = addMonths(startOfMonth(d), frequency === 'yearly' ? 12 : 1)
+  return format(setDate(first, Math.min(day, getDaysInMonth(first))), 'yyyy-MM-dd')
+}
+
+/** Next due date once a bill is paid on `today`: one period on, and always after today. */
+export function nextDueAfterPaying(bill: Bill, today: string): string {
+  let next = advanceDue(bill.nextDue, bill.frequency, bill.day)
+  for (let i = 0; i < 1000 && next <= today; i++) next = advanceDue(next, bill.frequency, bill.day)
+  return next
+}
+
+/** Negative = overdue. */
+export const daysUntilDue = (bill: Bill, today: string) => differenceInCalendarDays(parseISO(bill.nextDue), parseISO(today))
+
+/** Bills overdue or due within `withinDays`, soonest first. */
+export function billsDue(bills: Bill[], today: string, withinDays: number): Bill[] {
+  return bills.filter((b) => daysUntilDue(b, today) <= withinDays).sort((a, b) => a.nextDue.localeCompare(b.nextDue))
+}
+
+/** What the bills cost in an average month. */
+export function monthlyBillTotal(bills: Bill[]): number {
+  return bills.reduce((sum, b) => sum + (b.frequency === 'weekly' ? (b.amount * 52) / 12 : b.frequency === 'yearly' ? b.amount / 12 : b.amount), 0)
+}
+
+export function goalProgress(goal: Goal, today: string) {
+  const remaining = Math.max(goal.target - goal.saved, 0)
+  const ratio = goal.target > 0 ? Math.min(goal.saved / goal.target, 1) : 0
+  const reached = goal.target > 0 && goal.saved >= goal.target
+  const days = goal.deadline ? differenceInCalendarDays(parseISO(goal.deadline), parseISO(today)) : null
+  const late = !reached && days !== null && days < 0
+  const perMonth = !reached && days !== null && days >= 0 ? Math.ceil(remaining / Math.max(1, Math.ceil(days / 30))) : null
+  return { remaining, ratio, reached, days, late, perMonth }
 }

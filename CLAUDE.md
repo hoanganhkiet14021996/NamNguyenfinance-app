@@ -40,7 +40,8 @@ Talk to the user in Vietnamese; the app UI is English per the spec. The user is 
 - User asked for a SIMPLE main screen: `/` (Home) = MTD expense + quick add (type amount, tap category = saved, with Undo). Keep it minimal. A free-text note field (placeholder "Ghi chú: cơm tấm, trà sữa…") is always visible under the amount; the note becomes the transaction description (falls back to the category name).
 - Everything rich lives elsewhere: `/overview` (old dashboard: KPIs, charts, health, insights), `/plan` (salary, annual bonus, monthly budget, savings target, category budgets), `/transactions` (History), `/accounts`, `/settings`.
 - Budgets are recurring (`month: 'all'`), optionally overridden per month; use `budgetsForMonth` / `monthlyLimit` in `calc.ts`.
-- Not built yet: Goals, Investments, Analytics, Recurring, Loans, Subscriptions, CSV import (removed from nav for simplicity; re-add only if the user asks).
+- Bills (`/bills`, recurring payments: tap "Paid" records an expense dated today and moves `nextDue`, with Undo) and Goals (`/goals`, manual "Add money", does not touch accounts) exist since 2026-10-07 (`DATA_VERSION` 3, tables `fin_bills`/`fin_goals` in `schema.sql`; the user must re-run schema.sql in Supabase once, until then those two tables read as empty and syncing them fails). Home shows one "due soon" row when a bill is due within 7 days. Math: `advanceDue`, `nextDueAfterPaying`, `billsDue`, `goalProgress` in `calc.ts`.
+- Not built yet: Investments, Analytics, Loans, Subscriptions, CSV import (removed from nav for simplicity; re-add only if the user asks).
 - Type-check, build and 9 tests pass on the `supabase` branch (last run 2026-10-05).
 - The Add/Edit/Delete transaction flows were never fully clicked through by hand; verify when testing the cloud flow.
 
@@ -53,6 +54,9 @@ React + TypeScript + Vite, Tailwind v4 (tokens in `src/index.css`), Recharts, lu
 - Transfers never count as income/expense (`monthSummary`, `cashFlowSeries` skip them).
 - App state is one in-memory `AppData` object (`AppStore.tsx`); `src/lib/storage.ts` is the local cache (key `personal-cfo.v1`), `src/lib/cloud.ts` mirrors it to Supabase by diffing. When you add a field to `AppData`, update both the cloud mappers and `supabase/schema.sql`, and bump `DATA_VERSION` in `src/data/demo.ts`.
 - Demo data is generated in `src/data/demo.ts` (seeded, relative to today).
+- Categories: the list is code-owned in `src/data/categories.ts` (no UI to edit them). `upgradeCategories` runs on every load/import and rewrites saved data to the current defaults (by id), so to rename just edit the default; to drop one add it to `removedCategories` (its transactions move to the mapped id). Home quick add shows `pinnedExpenseIds` (food, drinks, transport, groceries, other) first, then "More" (user's choice, 2026-10-07). Category colors are lightened on dark via `.cat-icon/.cat-dot/.cat-fill` in `index.css`.
+- Themes: light, dark, pink (`html[data-theme='pink']` in `index.css`, a light theme), system. Button text on accent uses the `on-accent` token, never `text-white`.
+- Form modals pass `dismissOnBackdrop={false}` to `Modal` (a stray tap outside must not erase typing). Search uses `normalizeText` (accent-insensitive) from `lib/format.ts`. `Delta` takes `invert` for spending (rise = red).
 - Do not use `crypto.randomUUID` (breaks on http LAN access); use `uid()` from `src/lib/ids.ts`.
 
 ## Commands

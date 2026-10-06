@@ -1,5 +1,5 @@
 import { buildEmptyData } from '../data/demo'
-import type { Account, AppData, Budget, Category, Transaction } from '../types'
+import type { Account, AppData, Bill, Budget, Category, Goal, Transaction } from '../types'
 import { supabase } from './supabase'
 
 const PAGE = 1000 // Supabase returns at most 1000 rows per request
@@ -19,6 +19,17 @@ async function fetchAll(table: string, order: string[]): Promise<Row[]> {
   }
 }
 
+/** Like fetchAll, but a table that does not exist yet (schema.sql not re-run) just reads as empty. */
+async function fetchOptional(table: string, order: string[]): Promise<Row[]> {
+  try {
+    return await fetchAll(table, order)
+  } catch (e) {
+    const code = (e as { code?: string }).code
+    if (code === '42P01' || code === 'PGRST205') return []
+    throw e
+  }
+}
+
 const str = (v: unknown) => (v == null ? undefined : String(v))
 
 /** Load this user's data. Returns null when nothing has been saved to the cloud yet. */
@@ -27,11 +38,13 @@ export async function pullData(): Promise<AppData | null> {
   if (meta.error) throw meta.error
   if (!meta.data) return null
 
-  const [accounts, categories, transactions, budgets] = await Promise.all([
+  const [accounts, categories, transactions, budgets, bills, goals] = await Promise.all([
     fetchAll('fin_accounts', ['name', 'id']),
     fetchAll('fin_categories', ['name', 'id']),
     fetchAll('fin_transactions', ['date', 'id']),
     fetchAll('fin_budgets', ['id']),
+    fetchOptional('fin_bills', ['next_due', 'id']),
+    fetchOptional('fin_goals', ['created_at', 'id']),
   ])
 
   const base = buildEmptyData()
@@ -79,6 +92,24 @@ export async function pullData(): Promise<AppData | null> {
       categoryId: r.category_id as string,
       amount: Number(r.amount),
     })),
+    bills: bills.map((r) => ({
+      id: r.id as string,
+      name: r.name as string,
+      amount: Number(r.amount),
+      categoryId: r.category_id as string,
+      accountId: r.account_id as string,
+      frequency: r.frequency as Bill['frequency'],
+      nextDue: r.next_due as string,
+      day: Number(r.day),
+    })),
+    goals: goals.map((r) => ({
+      id: r.id as string,
+      name: r.name as string,
+      target: Number(r.target),
+      saved: Number(r.saved),
+      deadline: str(r.deadline),
+      createdAt: (r.created_at as string) ?? '',
+    })),
   }
 }
 
@@ -112,7 +143,7 @@ async function pushCollection<T extends { id: string }>(userId: string, { table,
 
 /** Send only what changed between `prev` (what the cloud has) and `next`. `prev = null` means the cloud is empty. */
 export async function pushChanges(userId: string, prev: AppData | null, next: AppData) {
-  const was = prev ?? { ...buildEmptyData(), accounts: [], categories: [], transactions: [], budgets: [] }
+  const was = prev ?? { ...buildEmptyData(), accounts: [], categories: [], transactions: [], budgets: [], bills: [], goals: [] }
 
   await pushCollection<Account>(userId, {
     table: 'fin_accounts',
@@ -159,6 +190,28 @@ export async function pushChanges(userId: string, prev: AppData | null, next: Ap
     prev: was.budgets,
     next: next.budgets,
     toRow: (b, user_id) => ({ user_id, id: b.id, month: b.month, category_id: b.categoryId, amount: b.amount }),
+  })
+  await pushCollection<Bill>(userId, {
+    table: 'fin_bills',
+    prev: was.bills,
+    next: next.bills,
+    toRow: (b, user_id) => ({
+      user_id,
+      id: b.id,
+      name: b.name,
+      amount: b.amount,
+      category_id: b.categoryId,
+      account_id: b.accountId,
+      frequency: b.frequency,
+      next_due: b.nextDue,
+      day: b.day,
+    }),
+  })
+  await pushCollection<Goal>(userId, {
+    table: 'fin_goals',
+    prev: was.goals,
+    next: next.goals,
+    toRow: (g, user_id) => ({ user_id, id: g.id, name: g.name, target: g.target, saved: g.saved, deadline: g.deadline ?? null, created_at: g.createdAt }),
   })
 
   const metaOf = (d: AppData) => JSON.stringify([d.settings, d.prefs, d.plan, d.dismissedInsights])

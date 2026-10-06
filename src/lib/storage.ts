@@ -14,10 +14,13 @@ export function loadData(): AppData | null {
       data = {
         ...data,
         version: 2,
+        bills: [],
+        goals: [],
         plan: data.isDemo ? { ...demoPlan } : { ...emptyPlan },
         budgets: data.budgets.map((b) => ({ ...b, month: 'all' })),
       }
     }
+    if (data.version === 2) data = { ...data, version: 3, bills: [], goals: [] }
     return data.version === DATA_VERSION ? data : null
   } catch {
     return null

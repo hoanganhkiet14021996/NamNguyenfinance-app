@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getDaysInMonth, parseISO } from 'date-fns'
-import { ChevronDown, Undo2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CalendarClock, ChevronDown, Undo2 } from 'lucide-react'
 import CategoryIcon from '../components/CategoryIcon'
+import { pinnedExpenseIds } from '../data/categories'
 import { useModals } from '../components/modals/ModalHost'
 import { Card, cx, Delta, Input, Progress, Segmented, Select } from '../components/ui'
 import { useDate, useMoney } from '../hooks/useMoney'
-import { monthlyLimit, monthSummary, shiftMonth } from '../lib/calc'
+import { billsDue, daysUntilDue, monthlyLimit, monthSummary, shiftMonth } from '../lib/calc'
+import { dueLabel } from './Bills'
 import { greeting } from '../lib/format'
 import { useStore } from '../store/AppStore'
 import type { Category } from '../types'
 
-const TOP_COUNT = 7
+const TOP_COUNT = 5
 
 export default function Home() {
   const { data, today, addTransaction, deleteTransaction } = useStore()
@@ -39,14 +42,17 @@ export default function Home() {
 
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(() => setToast(null), 6000)
+    const t = setTimeout(() => setToast(null), 10000)
     return () => clearTimeout(t)
   }, [toast])
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>()
     for (const t of data.transactions) if (t.type === type && t.categoryId) counts.set(t.categoryId, (counts.get(t.categoryId) ?? 0) + 1)
-    return data.categories.filter((c) => c.kind === type).sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0))
+    const pinRank = (c: Category) => (type === 'expense' && pinnedExpenseIds.includes(c.id) ? pinnedExpenseIds.indexOf(c.id) : Infinity)
+    return data.categories
+      .filter((c) => c.kind === type)
+      .sort((a, b) => pinRank(a) - pinRank(b) || (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0))
   }, [data.categories, data.transactions, type])
   const visible = showAll ? categories : categories.slice(0, TOP_COUNT)
 
@@ -61,6 +67,7 @@ export default function Home() {
     () => [...data.transactions].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)).slice(0, 5),
     [data.transactions],
   )
+  const dueBills = billsDue(data.bills, today, 7)
   const catById = new Map(data.categories.map((c) => [c.id, c]))
 
   function save(category: Category) {
@@ -103,7 +110,7 @@ export default function Home() {
           <span>Day {day} of {daysInMonth}</span>
           {lastMonthSame > 0 && (
             <span className="flex items-center gap-1">
-              <Delta value={spent - lastMonthSame} format={(n) => money(n, { mode: 'compact' })} suffix=" vs same days last month" />
+              <Delta invert value={spent - lastMonthSame} format={(n) => money(n, { mode: 'compact' })} suffix=" vs same days last month" />
             </span>
           )}
         </div>
@@ -123,6 +130,22 @@ export default function Home() {
           </div>
         )}
       </Card>
+
+      {dueBills.length > 0 && (
+        <Link to="/bills" className="card card-hover flex min-h-[48px] items-center gap-3 px-4 py-3 text-sm">
+          <CalendarClock size={18} className={daysUntilDue(dueBills[0], today) < 0 ? 'text-neg' : 'text-warn'} />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-medium">
+              {dueBills[0].name} · {money(dueBills[0].amount, { mode: 'compact' })}
+            </span>
+            <span className="block text-[13px] text-muted">
+              {dueLabel(daysUntilDue(dueBills[0], today))}
+              {dueBills.length > 1 && ` · +${dueBills.length - 1} more`}
+            </span>
+          </span>
+          <span className="text-[13px] font-medium text-accent">Bills</span>
+        </Link>
+      )}
 
       <Card className="space-y-4 p-4">
         <div className="flex items-center justify-between">
@@ -156,10 +179,11 @@ export default function Home() {
               setHint(false)
             }}
           />
+          <span className="text-xl text-muted">₫</span>
           <button
             type="button"
             onClick={() => setAmount((a) => Math.min((a || 0) * 1000, 999_999_999_999))}
-            className="rounded-lg bg-soft px-3 py-2 text-sm font-semibold text-muted active:bg-line"
+            className="min-h-[44px] rounded-lg bg-soft px-4 text-sm font-semibold text-muted active:bg-line"
             aria-label="Add three zeros"
           >
             000
@@ -171,13 +195,13 @@ export default function Home() {
 
         <div>
           <p className="mb-2 text-xs font-medium text-muted">Tap a category to save</p>
-          <div className="grid grid-cols-4 gap-2" role="group" aria-label="Category">
+          <div className="grid grid-cols-3 gap-2" role="group" aria-label="Category">
             {visible.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => save(c)}
-                className="flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl border border-line px-1 py-2 text-[11px] leading-tight transition-colors active:scale-[0.97] active:bg-accent-soft hover:bg-soft"
+                className="flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl border border-line px-1 py-2 text-[13px] leading-tight transition-colors active:scale-[0.97] active:bg-accent-soft hover:bg-soft"
               >
                 <CategoryIcon category={c} />
                 <span className="w-full truncate text-center">{c.name}</span>
@@ -187,7 +211,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setShowAll(!showAll)}
-                className="flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-line text-[11px] text-muted hover:bg-soft"
+                className="flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-line text-[13px] text-muted hover:bg-soft"
               >
                 <ChevronDown size={16} className={cx('transition-transform', showAll && 'rotate-180')} />
                 {showAll ? 'Less' : 'More'}
@@ -225,7 +249,7 @@ export default function Home() {
               deleteTransaction(toast.id)
               setToast(null)
             }}
-            className="flex items-center gap-1 font-semibold underline"
+            className="flex min-h-[44px] items-center gap-1 px-2 font-semibold underline"
           >
             <Undo2 size={14} /> Undo
           </button>

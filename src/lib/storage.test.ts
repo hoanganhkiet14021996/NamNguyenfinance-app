@@ -17,7 +17,8 @@ describe('loadData migration', () => {
     delete old.plan
     store.set('personal-cfo.v1', JSON.stringify(old))
     const data = loadData()
-    expect(data?.version).toBe(2)
+    expect(data?.version).toBe(3)
+    expect(data?.bills).toEqual([])
     expect(data?.plan.monthlyBudget).toBeGreaterThan(0)
     expect(data?.budgets.every((b) => b.month === 'all')).toBe(true)
   })

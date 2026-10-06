@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { ChevronsLeft, ChevronsRight, Ellipsis, House, Landmark, LayoutDashboard, PiggyBank, Plus, Receipt, Settings, X, type LucideIcon } from 'lucide-react'
+import { CalendarClock, ChevronsLeft, ChevronsRight, Ellipsis, House, Landmark, LayoutDashboard, PiggyBank, Plus, Receipt, Settings, Target, X, type LucideIcon } from 'lucide-react'
 import { cx, useConfirmTap } from '../components/ui'
 import { useModals } from '../components/modals/ModalHost'
 import { useApplyAppearance } from '../hooks/useTheme'
@@ -17,6 +17,8 @@ const nav: NavItem[] = [
   { to: '/transactions', label: 'History', icon: Receipt },
   { to: '/overview', label: 'Overview', icon: LayoutDashboard },
   { to: '/plan', label: 'Plan', icon: PiggyBank },
+  { to: '/bills', label: 'Bills', icon: CalendarClock },
+  { to: '/goals', label: 'Goals', icon: Target },
   { to: '/accounts', label: 'Accounts', icon: Landmark },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
@@ -93,7 +95,7 @@ export default function AppLayout() {
         <button
           onClick={() => openTransaction()}
           aria-label="Add transaction"
-          className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-lg active:scale-95 dark:text-zinc-950 md:hidden"
+          className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-on-accent shadow-lg active:scale-95 md:hidden"
         >
           <Plus size={26} />
         </button>
@@ -108,13 +110,13 @@ export default function AppLayout() {
             key={item.to}
             to={item.to}
             end={item.to === '/'}
-            className={({ isActive }) => cx('flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium', isActive ? 'text-accent' : 'text-muted')}
+            className={({ isActive }) => cx('flex min-h-[56px] flex-col items-center justify-center gap-1 py-2 text-xs font-medium', isActive ? 'text-accent' : 'text-muted')}
           >
             <item.icon size={20} />
             {item.label}
           </NavLink>
         ))}
-        <button onClick={() => setMoreOpen(true)} className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium text-muted" aria-haspopup="dialog">
+        <button onClick={() => setMoreOpen(true)} className="flex min-h-[56px] flex-col items-center justify-center gap-1 py-2 text-xs font-medium text-muted" aria-haspopup="dialog">
           <Ellipsis size={20} />
           More
         </button>

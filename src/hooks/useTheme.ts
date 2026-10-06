@@ -8,8 +8,11 @@ export function useApplyAppearance() {
     const media = window.matchMedia('(prefers-color-scheme: dark)')
     const apply = () => {
       const dark = theme === 'dark' || (theme === 'system' && media.matches)
+      const pink = theme === 'pink'
       document.documentElement.classList.toggle('dark', dark)
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#071315' : '#f3f7f7')
+      if (pink) document.documentElement.dataset.theme = 'pink'
+      else delete document.documentElement.dataset.theme
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#071315' : pink ? '#fbe8ef' : '#f3f7f7')
     }
     apply()
     media.addEventListener('change', apply)

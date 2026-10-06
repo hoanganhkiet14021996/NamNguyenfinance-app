@@ -191,12 +191,36 @@ create table if not exists public.fin_budgets (
   primary key (user_id, id)
 );
 
+create table if not exists public.fin_bills (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  id text not null,
+  name text not null default '',
+  amount numeric not null default 0 check (amount >= 0),
+  category_id text not null default '',
+  account_id text not null default '',
+  frequency text not null check (frequency in ('weekly', 'monthly', 'yearly')),
+  next_due text not null, -- YYYY-MM-DD
+  day integer not null default 1,
+  primary key (user_id, id)
+);
+
+create table if not exists public.fin_goals (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  id text not null,
+  name text not null default '',
+  target numeric not null default 0 check (target >= 0),
+  saved numeric not null default 0,
+  deadline text, -- YYYY-MM-DD, optional
+  created_at text not null default '',
+  primary key (user_id, id)
+);
+
 -- Row Level Security (NAMONEY): signed-in users see and change only their own rows; anonymous visitors get nothing.
 do $$
 declare
   t text;
 begin
-  foreach t in array array['fin_settings', 'fin_accounts', 'fin_categories', 'fin_transactions', 'fin_budgets'] loop
+  foreach t in array array['fin_settings', 'fin_accounts', 'fin_categories', 'fin_transactions', 'fin_budgets', 'fin_bills', 'fin_goals'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from anon', t);
     execute format('drop policy if exists "own rows" on public.%I', t);

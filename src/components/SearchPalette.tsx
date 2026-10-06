@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Landmark, Search, Tag } from 'lucide-react'
 import { useDate, useMoney } from '../hooks/useMoney'
+import { normalizeText } from '../lib/format'
 import { useStore } from '../store/AppStore'
 import CategoryIcon from './CategoryIcon'
 import { useModals } from './modals/ModalHost'
@@ -14,7 +15,7 @@ export default function SearchPalette({ onClose }: { onClose: () => void }) {
   const money = useMoney()
   const fmtDate = useDate()
   const [q, setQ] = useState('')
-  const term = q.trim().toLowerCase()
+  const term = normalizeText(q.trim())
 
   const results = useMemo(() => {
     if (!term) return null
@@ -24,13 +25,13 @@ export default function SearchPalette({ onClose }: { onClose: () => void }) {
       .filter((t) =>
         [t.description, t.merchant, t.notes, t.categoryId && catName.get(t.categoryId), accName.get(t.accountId), ...(t.tags ?? [])]
           .filter(Boolean)
-          .some((v) => v!.toLowerCase().includes(term)),
+          .some((v) => normalizeText(v!).includes(term)),
       )
       .sort((a, b) => b.date.localeCompare(a.date))
     return {
       txs,
-      accounts: data.accounts.filter((a) => `${a.name} ${a.institution}`.toLowerCase().includes(term)),
-      categories: data.categories.filter((c) => c.name.toLowerCase().includes(term)),
+      accounts: data.accounts.filter((a) => normalizeText(`${a.name} ${a.institution}`).includes(term)),
+      categories: data.categories.filter((c) => normalizeText(c.name).includes(term)),
     }
   }, [term, data])
 
@@ -54,7 +55,7 @@ export default function SearchPalette({ onClose }: { onClose: () => void }) {
             if (e.key === 'Enter' && term) go(`/transactions?q=${encodeURIComponent(q.trim())}&range=all`)
           }}
           placeholder="Search transactions, accounts, categories…"
-          className="w-full bg-transparent py-3 text-sm outline-none"
+          className="w-full bg-transparent py-3 text-base outline-none md:text-sm"
         />
       </div>
 

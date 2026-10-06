@@ -28,12 +28,14 @@ vi.mock('./lib/supabase', () => ({
   },
 }))
 
+import { upgradeCategories } from './data/categories'
 import { buildEmptyData } from './data/demo'
 import { normalizeUsername, usernameToEmail, validatePin, validateUsername } from './lib/auth'
-import { budgetUsage, budgetsForMonth, computeBalances, monthSummary, monthlyLimit } from './lib/calc'
+import { advanceDue, billsDue, budgetUsage, budgetsForMonth, computeBalances, goalProgress, monthSummary, monthlyBillTotal, monthlyLimit, nextDueAfterPaying } from './lib/calc'
 import { pushChanges } from './lib/cloud'
+import { normalizeText } from './lib/format'
 import { loadData, saveData } from './lib/storage'
-import type { Account, AppData, Transaction } from './types'
+import type { Account, AppData, Bill, Goal, Transaction } from './types'
 
 const MONTH = '2026-10'
 
@@ -72,6 +74,14 @@ describe('sign-in (name + PIN)', () => {
     expect(validatePin('12a456')).not.toBeNull()
     expect(validateUsername('ab')).not.toBeNull()
     expect(validateUsername('nam')).toBeNull()
+  })
+})
+
+describe('search', () => {
+  it('finds Vietnamese text typed without accents', () => {
+    expect(normalizeText('Cơm tấm').includes(normalizeText('com tam'))).toBe(true)
+    expect(normalizeText('Đồ ăn').includes(normalizeText('DO AN'))).toBe(true)
+    expect(normalizeText('Cơm tấm').includes(normalizeText('bun bo'))).toBe(false)
   })
 })
 
@@ -122,6 +132,75 @@ describe('budgets', () => {
   })
 })
 
+describe('categories', () => {
+  it('an old account gets the new list: Shopping goes, its spending moves to Other, nothing is lost', () => {
+    const old = { ...startData().categories[0], id: 'shopping', name: 'Shopping' }
+    let d: AppData = { ...startData(), categories: [old], budgets: [{ id: 'b1', month: 'all', categoryId: 'shopping', amount: 1 }] }
+    d = add(d, expense('t1', 200_000, 'shopping'))
+    const up = upgradeCategories(d)
+    const ids = up.categories.map((c) => c.id)
+    expect(ids).toEqual(expect.arrayContaining(['food', 'drinks', 'groceries', 'clothes', 'sports', 'hangouts']))
+    expect(ids).not.toContain('shopping')
+    expect(up.transactions[0]).toMatchObject({ categoryId: 'other', amount: 200_000 })
+    expect(up.budgets).toEqual([])
+    expect(upgradeCategories(up)).toBe(up)
+  })
+})
+
+const rent: Bill = { id: 'b1', name: 'Rent', amount: 9_000_000, categoryId: 'housing', accountId: 'bank', frequency: 'monthly', nextDue: '2026-10-31', day: 31 }
+
+describe('bills', () => {
+  it('shows only bills that are overdue or due within the week, soonest first', () => {
+    const power: Bill = { ...rent, id: 'b2', name: 'Power', nextDue: '2026-10-09', day: 9 }
+    const gym: Bill = { ...rent, id: 'b3', name: 'Gym', nextDue: '2026-10-05', day: 5 }
+    expect(billsDue([rent, power, gym], '2026-10-07', 7).map((b) => b.id)).toEqual(['b3', 'b2'])
+  })
+
+  it('paying a monthly bill moves it to the next month and keeps the day of month', () => {
+    expect(advanceDue('2026-01-31', 'monthly', 31)).toBe('2026-02-28')
+    expect(advanceDue('2026-02-28', 'monthly', 31)).toBe('2026-03-31')
+    expect(advanceDue('2026-10-07', 'weekly', 7)).toBe('2026-10-14')
+    expect(advanceDue('2026-10-07', 'yearly', 7)).toBe('2027-10-07')
+  })
+
+  it('a very late payment still lands on a future date', () => {
+    const late: Bill = { ...rent, nextDue: '2026-07-31' }
+    expect(nextDueAfterPaying(late, '2026-10-07')).toBe('2026-10-31')
+    expect(nextDueAfterPaying(rent, '2026-10-31')).toBe('2026-11-30')
+  })
+
+  it('adds up an average month of bills', () => {
+    const weekly: Bill = { ...rent, id: 'w', amount: 120_000, frequency: 'weekly' }
+    const yearly: Bill = { ...rent, id: 'y', amount: 1_200_000, frequency: 'yearly' }
+    expect(Math.round(monthlyBillTotal([rent, weekly, yearly]))).toBe(9_000_000 + 520_000 + 100_000)
+  })
+
+  it('paying a bill records one expense and lowers the account', () => {
+    const d: AppData = { ...startData(), bills: [rent] }
+    const paid = add(d, { id: 't1', type: 'expense', date: '2026-10-31', amount: rent.amount, description: rent.name, categoryId: rent.categoryId, accountId: rent.accountId })
+    expect(computeBalances(paid.accounts, paid.transactions).get('bank')).toBe(5_000_000 - 9_000_000)
+    expect(monthSummary(paid.transactions, '2026-10').expenses).toBe(9_000_000)
+  })
+})
+
+describe('goals', () => {
+  const trip: Goal = { id: 'g1', name: 'Trip', target: 12_000_000, saved: 3_000_000, deadline: '2027-01-07', createdAt: '2026-10-01' }
+
+  it('shows progress and how much to save each month', () => {
+    const p = goalProgress(trip, '2026-10-07')
+    expect(p.ratio).toBe(0.25)
+    expect(p.remaining).toBe(9_000_000)
+    expect(p.perMonth).toBe(2_250_000) // 92 days rounds up to 4 months: 9M / 4
+    expect(p.reached).toBe(false)
+  })
+
+  it('knows when a goal is reached or past its deadline', () => {
+    expect(goalProgress({ ...trip, saved: 12_000_000 }, '2026-10-07').reached).toBe(true)
+    expect(goalProgress(trip, '2027-02-01').late).toBe(true)
+    expect(goalProgress({ ...trip, deadline: undefined }, '2026-10-07').perMonth).toBeNull()
+  })
+})
+
 describe('saving', () => {
   beforeEach(() => {
     const store = new Map<string, string>()
@@ -154,6 +233,30 @@ describe('saving', () => {
     ])
     // Nothing else changed, so nothing else is sent
     expect(cloudCalls.filter((c) => c.table !== 'fin_transactions')).toEqual([])
+  })
+
+  it('cloud sync sends bills and goals too', async () => {
+    const before = startData()
+    const after: AppData = {
+      ...before,
+      bills: [rent],
+      goals: [{ id: 'g1', name: 'Trip', target: 1_000_000, saved: 0, createdAt: '2026-10-01' }],
+    }
+    await pushChanges('user-1', before, after)
+    expect(cloudCalls).toEqual([
+      { table: 'fin_bills', op: 'upsert', ids: ['b1'] },
+      { table: 'fin_goals', op: 'upsert', ids: ['g1'] },
+    ])
+  })
+
+  it('a copy saved before bills and goals existed still opens', () => {
+    const old = { ...startData(), version: 2 } as Record<string, unknown>
+    delete old.bills
+    delete old.goals
+    localStorage.setItem('personal-cfo.v1', JSON.stringify(old))
+    const loaded = loadData()
+    expect(loaded?.bills).toEqual([])
+    expect(loaded?.goals).toEqual([])
   })
 
   it('first sign-in uploads everything, settings last', async () => {

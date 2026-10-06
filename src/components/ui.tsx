@@ -8,7 +8,7 @@ export function cx(...parts: (string | false | null | undefined)[]) {
 const btnBase =
   'inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none select-none'
 const btnVariants = {
-  primary: 'bg-accent text-white dark:text-zinc-950 hover:opacity-90 px-4 py-2.5',
+  primary: 'bg-accent text-on-accent hover:opacity-90 px-4 py-2.5',
   secondary: 'bg-card border border-line text-ink hover:bg-soft px-4 py-2.5',
   ghost: 'text-muted hover:bg-soft hover:text-ink px-3 py-2',
   danger: 'bg-card border border-line text-neg hover:bg-soft px-4 py-2.5',
@@ -83,7 +83,7 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 }
 
 const fieldClass =
-  'w-full rounded-xl border border-line bg-card px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-muted/70 focus:border-accent'
+  'w-full rounded-xl border border-line bg-card px-3 py-2.5 text-base outline-none md:text-sm transition-colors placeholder:text-muted/70 focus:border-accent'
 
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: ReactNode }) {
   return (
@@ -124,7 +124,7 @@ export function Segmented<T extends string>({
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={cx(
-            'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+            'min-h-[40px] rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
             value === o.value ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink',
           )}
         >
@@ -151,11 +151,12 @@ export function Progress({ ratio, tone = 'accent', label }: { ratio: number; ton
   )
 }
 
-export function Delta({ value, format, suffix = '' }: { value: number; format: (n: number) => string; suffix?: string }) {
+/** `invert`: a rise is bad news (spending), so it is red and a fall is green. */
+export function Delta({ value, format, suffix = '', invert }: { value: number; format: (n: number) => string; suffix?: string; invert?: boolean }) {
   if (Math.abs(value) < 0.5) return <span className="text-xs text-muted">No change{suffix}</span>
   const up = value > 0
   return (
-    <span className={cx('num text-xs font-medium', up ? 'text-pos' : 'text-neg')}>
+    <span className={cx('num text-xs font-medium', up !== !!invert ? 'text-pos' : 'text-neg')}>
       {up ? '▲' : '▼'} {format(Math.abs(value))}
       {suffix}
     </span>
@@ -173,7 +174,20 @@ export function EmptyState({ title, text, action, icon }: { title: string; text:
   )
 }
 
-export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+/** `dismissOnBackdrop={false}` for forms: a stray tap outside must not throw away what was typed. */
+export function Modal({
+  title,
+  onClose,
+  children,
+  wide,
+  dismissOnBackdrop = true,
+}: {
+  title: string
+  onClose: () => void
+  children: ReactNode
+  wide?: boolean
+  dismissOnBackdrop?: boolean
+}) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -205,7 +219,7 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
   }, [onClose])
 
   return (
-    <div className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onMouseDown={onClose}>
+    <div className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onMouseDown={dismissOnBackdrop ? onClose : undefined}>
       <div
         ref={ref}
         role="dialog"
@@ -219,7 +233,7 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
       >
         <div className="flex items-center justify-between px-5 pb-2 pt-5">
           <h2 className="text-lg font-semibold">{title}</h2>
-          <button onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-muted hover:bg-soft">
+          <button onClick={onClose} aria-label="Close" className="rounded-lg p-3 text-muted hover:bg-soft">
             <X size={18} />
           </button>
         </div>

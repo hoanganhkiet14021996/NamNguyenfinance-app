@@ -27,7 +27,11 @@ export function formatMoney(n: number, { mode = 'full', sign = false, symbol = t
   return `${prefix}${body}${symbol ? ' ₫' : ''}`
 }
 
-export const num = (n: number) => grouped.format(Math.round(n))
+/** Lowercase, strip Vietnamese diacritics (đ -> d) so "com tam" finds "Cơm tấm". */
+export const normalizeText = (s: string) =>
+  s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
+
+export const num =(n: number) => grouped.format(Math.round(n))
 
 export const axisMoney = (n: number) => formatMoney(n, { mode: 'compact', symbol: false })
 
